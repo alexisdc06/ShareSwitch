@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ForceDesignerDpiAwareness>true</ForceDesignerDpiAwareness>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!-- App identity (Version is overridden by CI from the git tag on releases) -->
+  <PropertyGroup>
+    <Version>0.2.0</Version>
+    <ApplicationIcon>assets\icon.ico</ApplicationIcon>
+    <AssemblyTitle>ShareSwitch</AssemblyTitle>
+    <Product>ShareSwitch</Product>
+    <Company>AC Design Studio</Company>
+    <Copyright>© 2026 AC Design Studio</Copyright>
+    <Description>Switch the window you share in video calls without stopping the share.</Description>
+  </PropertyGroup>
+
+</Project>
