@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Windows.Forms;
 using ShareSwitch.Hooks;
 using ShareSwitch.Interop;
@@ -9,14 +8,20 @@ namespace ShareSwitch.Selection;
 /// Orchestrates hold-to-select mode:
 ///
 ///   hold the configured modifier combo (default Ctrl+Alt)
-///     → ShareWindow becomes click-through, mouse hook is installed,
-///       the window under the cursor gets a live highlight frame
-///   left-click → ShareWindow switches to that window (click is swallowed)
+///     → ShareWindow becomes click-through and the mouse hook is installed
+///   left-click any window → it becomes the mirrored source; a confirmation
+///     frame flashes once over it and fades out
 ///   release the combo, or press Esc → cancel
 ///
+/// Deliberately does <b>no work on mouse movement</b>. An earlier version drew a
+/// highlight frame that followed the cursor, which meant repainting a form from
+/// inside the low-level mouse hook callback — visually noisy, and slow enough
+/// that Windows could silently drop the hook (leaving the frame stuck on screen).
+/// Now the hook only reacts to a click, and the frame is self-expiring.
+///
 /// The keyboard hook is always installed; the mouse hook only while selecting.
-/// A short activation delay avoids overlay flicker from AltGr typing on AZERTY
-/// layouts (AltGr is reported as Ctrl+Alt) and from ordinary app shortcuts.
+/// A short activation delay avoids triggering on AltGr (reported as Ctrl+Alt on
+/// AZERTY layouts) and on ordinary app shortcuts.
 ///
 /// Everything runs on the UI thread (LL hooks deliver to the installing thread).
 /// </summary>
@@ -26,12 +31,11 @@ public sealed class SelectionController : IDisposable
     private readonly MouseHook _mouseHook = new();
     private readonly HighlightOverlay _overlay = new();
     private readonly System.Windows.Forms.Timer _activationTimer = new();
+    private readonly System.Windows.Forms.Timer _safetyTimer = new() { Interval = 200 };
     private readonly Func<ShareWindow> _getShareWindow;
 
     private bool _comboHeld;
     private bool _selecting;
-    private IntPtr _targetHwnd = IntPtr.Zero;
-    private string _targetTitle = string.Empty;
 
     /// <param name="getShareWindow">Returns the current ShareWindow (creating it
     /// if needed) — the tray context owns its lifetime.</param>
@@ -40,7 +44,6 @@ public sealed class SelectionController : IDisposable
         _getShareWindow = getShareWindow;
 
         _keyboardHook.KeyEvent += OnKeyEvent;
-        _mouseHook.MouseMoved += OnMouseMoved;
         _mouseHook.LeftButtonDown += OnLeftButtonDown;
 
         _activationTimer.Tick += (_, _) =>
@@ -49,6 +52,17 @@ public sealed class SelectionController : IDisposable
             if (_comboHeld && !_selecting)
                 EnterSelectionMode();
         };
+
+        // Failsafe: if a key-up is ever missed (focus loss, UAC prompt, lock
+        // screen, dropped hook), physical key state still tells the truth.
+        _safetyTimer.Tick += (_, _) =>
+        {
+            if (_selecting && !AreRequiredModifiersPhysicallyHeld())
+            {
+                _comboHeld = false;
+                ExitSelectionMode();
+            }
+        };
     }
 
     /// <summary>Installs the global keyboard hook. Call once at startup.</summary>
@@ -56,25 +70,29 @@ public sealed class SelectionController : IDisposable
 
     #region Keyboard
 
+    private static Keys RequiredModifiers
+        => AppSettings.Current.SelectionModifiers & (Keys.Control | Keys.Alt | Keys.Shift);
+
     private void OnKeyEvent(object? sender, KeyboardHookEventArgs e)
     {
-        // Esc cancels selection mode (and is swallowed so the focused app never sees it).
+        // Esc cancels selection (swallowed, so the focused app never sees it).
         if (_selecting && e.IsDown && e.Key == Keys.Escape)
         {
             e.Handled = true;
+            _comboHeld = false;
             ExitSelectionMode();
             return;
         }
 
-        Keys required = AppSettings.Current.SelectionModifiers & (Keys.Control | Keys.Alt | Keys.Shift);
+        Keys required = RequiredModifiers;
         if (required == Keys.None) return; // misconfigured — never trigger
 
         Keys held = GetHeldModifiers(e);
 
         if (!_comboHeld && held == required)
         {
-            // Exact match required to engage: holding extra modifiers
-            // (e.g. Ctrl+Alt+Shift for an app shortcut) must not trigger us.
+            // Exact match required: holding extra modifiers (e.g. Ctrl+Alt+Shift
+            // for an app shortcut) must not arm selection mode.
             _comboHeld = true;
             _activationTimer.Interval = Math.Max(1, AppSettings.Current.SelectionActivationDelayMs);
             _activationTimer.Start();
@@ -95,10 +113,7 @@ public sealed class SelectionController : IDisposable
     /// </summary>
     private static Keys GetHeldModifiers(KeyboardHookEventArgs e)
     {
-        Keys held = Keys.None;
-        if (NativeMethods.IsKeyDown(NativeMethods.VK_CONTROL)) held |= Keys.Control;
-        if (NativeMethods.IsKeyDown(NativeMethods.VK_MENU)) held |= Keys.Alt;
-        if (NativeMethods.IsKeyDown(NativeMethods.VK_SHIFT)) held |= Keys.Shift;
+        Keys held = ReadPhysicalModifiers();
 
         Keys eventModifier = e.Key switch
         {
@@ -114,6 +129,21 @@ public sealed class SelectionController : IDisposable
         return held;
     }
 
+    private static Keys ReadPhysicalModifiers()
+    {
+        Keys held = Keys.None;
+        if (NativeMethods.IsKeyDown(NativeMethods.VK_CONTROL)) held |= Keys.Control;
+        if (NativeMethods.IsKeyDown(NativeMethods.VK_MENU)) held |= Keys.Alt;
+        if (NativeMethods.IsKeyDown(NativeMethods.VK_SHIFT)) held |= Keys.Shift;
+        return held;
+    }
+
+    private static bool AreRequiredModifiersPhysicallyHeld()
+    {
+        Keys required = RequiredModifiers;
+        return required != Keys.None && (ReadPhysicalModifiers() & required) == required;
+    }
+
     #endregion
 
     #region Selection mode
@@ -126,65 +156,40 @@ public sealed class SelectionController : IDisposable
         }
         catch (Exception)
         {
-            // Without the mouse hook selection mode cannot work — abort quietly.
+            // Without the mouse hook selection cannot work — abort quietly.
             return;
         }
 
         _selecting = true;
+        _safetyTimer.Start();
         _getShareWindow().SetClickThrough(true);
-        UpdateTarget(Cursor.Position);
     }
 
     private void ExitSelectionMode()
     {
-        _selecting = false;
-        _mouseHook.Uninstall();
-        _overlay.HideHighlight();
-        _targetHwnd = IntPtr.Zero;
-        _targetTitle = string.Empty;
-        _getShareWindow().SetClickThrough(false);
-    }
+        if (!_selecting) return;
 
-    private void OnMouseMoved(Point screenPoint)
-    {
-        if (_selecting)
-            UpdateTarget(screenPoint);
+        _selecting = false;
+        _safetyTimer.Stop();
+        _mouseHook.Uninstall();
+        _getShareWindow().SetClickThrough(false);
     }
 
     private void OnLeftButtonDown(object? sender, MouseButtonEventArgs e)
     {
         if (!_selecting) return;
 
-        UpdateTarget(e.Location); // make sure we commit what's actually under the click
+        IntPtr root = WindowEnumerator.GetTopLevelWindowAt(e.Location);
+        if (root == IntPtr.Zero || !WindowEnumerator.IsCaptureCandidate(root))
+            return; // not a valid target — let the click through untouched
 
-        if (_targetHwnd == IntPtr.Zero) return; // nothing valid → let the click through
+        e.Handled = true; // swallow the click so the target app never sees it
 
-        e.Handled = true; // swallow the click so the target app doesn't receive it
-
-        IntPtr hwnd = _targetHwnd;
-        string title = _targetTitle;
+        string title = NativeMethods.GetWindowTitle(root);
         ExitSelectionMode();
-        _getShareWindow().SetSource(hwnd, title);
-    }
 
-    private void UpdateTarget(Point screenPoint)
-    {
-        IntPtr root = WindowEnumerator.GetTopLevelWindowAt(screenPoint);
-
-        if (root == _targetHwnd) return; // unchanged — keep hook callback cheap
-
-        if (root != IntPtr.Zero && WindowEnumerator.IsCaptureCandidate(root))
-        {
-            _targetHwnd = root;
-            _targetTitle = NativeMethods.GetWindowTitle(root);
-            _overlay.HighlightWindow(root, _targetTitle);
-        }
-        else
-        {
-            _targetHwnd = IntPtr.Zero;
-            _targetTitle = string.Empty;
-            _overlay.HideHighlight();
-        }
+        if (_getShareWindow().SetSource(root, title))
+            _overlay.Flash(root, title); // confirmation only; fades out by itself
     }
 
     #endregion
@@ -192,8 +197,10 @@ public sealed class SelectionController : IDisposable
     public void Dispose()
     {
         _activationTimer.Dispose();
+        _safetyTimer.Dispose();
         _mouseHook.Dispose();
         _keyboardHook.Dispose();
+        _overlay.HideNow();
         _overlay.Dispose();
     }
 }

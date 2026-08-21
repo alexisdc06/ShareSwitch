@@ -6,19 +6,29 @@ using ShareSwitch.Interop;
 namespace ShareSwitch.Selection;
 
 /// <summary>
-/// Borderless, topmost, click-through window that draws a colored frame around
-/// the window currently under the mouse during selection mode.
+/// Borderless, topmost, click-through frame that <b>flashes once</b> over the
+/// window you just picked, then fades out on its own.
 ///
-/// WS_EX_TRANSPARENT keeps it invisible to WindowFromPoint, so it never
-/// becomes its own selection target; WS_EX_NOACTIVATE ensures it never steals
-/// focus from the call/app the user is presenting.
+/// Self-limiting by design: the overlay starts its own countdown the moment it
+/// becomes visible, so it can never remain stuck on screen even if selection
+/// mode ends abnormally (missed key-up, dropped hook, app losing focus).
+///
+/// WS_EX_TRANSPARENT keeps it invisible to WindowFromPoint; WS_EX_NOACTIVATE
+/// means it never steals focus from the call you're presenting in.
 /// </summary>
 public sealed class HighlightOverlay : Form
 {
     private static readonly Color BorderColor = Color.FromArgb(0, 170, 255);
     private const int BorderThickness = 4;
 
-    private string _targetTitle = string.Empty;
+    // ~30 ms per tick: hold at full opacity, then fade out.
+    private const int TickMs = 30;
+    private const int HoldTicks = 7;  // ~210 ms
+    private const int FadeTicks = 8;  // ~240 ms
+
+    private readonly System.Windows.Forms.Timer _timer;
+    private int _tick;
+    private string _title = string.Empty;
 
     public HighlightOverlay()
     {
@@ -27,14 +37,17 @@ public sealed class HighlightOverlay : Form
         TopMost = true;
         StartPosition = FormStartPosition.Manual;
 
-        // Everything painted in BackColor becomes fully transparent;
-        // only the border + title chip remain visible.
+        // Everything painted in BackColor is fully transparent; only the frame
+        // and the title chip remain visible.
         BackColor = Color.Black;
         TransparencyKey = Color.Black;
 
         SetStyle(ControlStyles.AllPaintingInWmPaint
                | ControlStyles.UserPaint
                | ControlStyles.OptimizedDoubleBuffer, true);
+
+        _timer = new System.Windows.Forms.Timer { Interval = TickMs };
+        _timer.Tick += OnTick;
     }
 
     protected override bool ShowWithoutActivation => true;
@@ -51,38 +64,58 @@ public sealed class HighlightOverlay : Form
         }
     }
 
-    /// <summary>Moves the overlay frame onto the given window.</summary>
-    public void HighlightWindow(IntPtr hWnd, string title)
+    /// <summary>
+    /// Flashes the confirmation frame over <paramref name="hWnd"/>.
+    /// Safe to call repeatedly; a new flash restarts the countdown.
+    /// </summary>
+    public void Flash(IntPtr hWnd, string title)
     {
         var bounds = NativeMethods.GetVisibleWindowBounds(hWnd);
-        if (bounds.Width <= 0 || bounds.Height <= 0)
+        if (bounds.Width <= 0 || bounds.Height <= 0) return;
+
+        _title = title;
+        _tick = 0;
+        Bounds = bounds;
+        Opacity = 1.0;
+
+        // Show without activating, so focus stays where the user left it.
+        NativeMethods.SetWindowPos(Handle, IntPtr.Zero, bounds.X, bounds.Y,
+            bounds.Width, bounds.Height,
+            NativeMethods.SWP_SHOWWINDOW | NativeMethods.SWP_NOACTIVATE);
+
+        Invalidate();
+        _timer.Start();
+    }
+
+    /// <summary>Cancels any in-flight flash immediately (used on shutdown).</summary>
+    public void HideNow()
+    {
+        _timer.Stop();
+        _tick = 0;
+        if (Visible) Hide();
+    }
+
+    private void OnTick(object? sender, EventArgs e)
+    {
+        _tick++;
+
+        if (_tick <= HoldTicks) return;
+
+        int fadeStep = _tick - HoldTicks;
+        if (fadeStep >= FadeTicks)
         {
-            HideHighlight();
+            HideNow();
             return;
         }
 
-        _targetTitle = title;
-        Bounds = bounds;
-
-        if (!Visible)
-            NativeMethods.SetWindowPos(Handle, IntPtr.Zero, bounds.X, bounds.Y,
-                bounds.Width, bounds.Height,
-                NativeMethods.SWP_SHOWWINDOW | NativeMethods.SWP_NOACTIVATE);
-
-        Invalidate();
-    }
-
-    public void HideHighlight()
-    {
-        _targetTitle = string.Empty;
-        if (Visible) Hide();
+        Opacity = 1.0 - (double)fadeStep / FadeTicks;
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
 
-        // Frame (drawn inset so the full thickness stays inside our bounds)
         using (var pen = new Pen(BorderColor, BorderThickness))
         {
             int half = BorderThickness / 2;
@@ -90,12 +123,10 @@ public sealed class HighlightOverlay : Form
                 ClientSize.Width - BorderThickness, ClientSize.Height - BorderThickness);
         }
 
-        // Title chip
-        if (_targetTitle.Length > 0)
+        if (_title.Length > 0)
         {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
             using var font = new Font("Segoe UI", 10f, FontStyle.Bold);
-            string text = _targetTitle.Length > 80 ? _targetTitle[..80] + "…" : _targetTitle;
+            string text = _title.Length > 80 ? _title[..80] + "…" : _title;
             SizeF size = g.MeasureString(text, font);
 
             var chip = new RectangleF(BorderThickness + 6, BorderThickness + 6,
@@ -104,5 +135,11 @@ public sealed class HighlightOverlay : Form
             g.FillRectangle(bg, chip);
             g.DrawString(text, font, Brushes.White, chip.X + 8, chip.Y + 4);
         }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) _timer.Dispose();
+        base.Dispose(disposing);
     }
 }

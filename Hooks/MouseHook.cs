@@ -61,6 +61,13 @@ public sealed class MouseHook : IDisposable
             try
             {
                 int msg = wParam.ToInt32();
+
+                // Mouse moves arrive in floods. Skip all work (including the
+                // struct marshal) when nobody is listening — keeps the hook
+                // callback fast enough that Windows never drops it.
+                if (msg == WM_MOUSEMOVE && MouseMoved is null)
+                    return CallNextHookEx(_hook, nCode, wParam, lParam);
+
                 var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
                 var point = new Point(data.pt.X, data.pt.Y);
 

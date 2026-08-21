@@ -24,6 +24,13 @@ public sealed class AppSettings
     /// </summary>
     public int SelectionActivationDelayMs { get; set; } = 150;
 
+    /// <summary>
+    /// When true, ShareWindow continuously resizes itself to match the source
+    /// window's shape, so viewers see no letterbox bars. Turn off to keep a
+    /// fixed window size.
+    /// </summary>
+    public bool AutoFitToSource { get; set; } = true;
+
     /// <summary>Raised when any setting changes so live components can re-read.</summary>
     public event EventHandler? Changed;
 

@@ -31,6 +31,19 @@ public class TrayApplicationContext : ApplicationContext
         menu.Items.Add("Show Share Window", null, (_, _) => ShowShareWindow());
         menu.Items.Add("Select Window…", null, (_, _) => ShowWindowPicker());
         menu.Items.Add(_hotkeyMenu);
+
+        var autoFitItem = new ToolStripMenuItem("Auto-fit window to source")
+        {
+            Checked = AppSettings.Current.AutoFitToSource,
+            CheckOnClick = true
+        };
+        autoFitItem.CheckedChanged += (sender, _) =>
+        {
+            AppSettings.Current.AutoFitToSource = ((ToolStripMenuItem)sender!).Checked;
+            AppSettings.Current.NotifyChanged();
+        };
+        menu.Items.Add(autoFitItem);
+
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitApplication());
 
