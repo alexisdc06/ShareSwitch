@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Keeps the GitHub Actions used by CI/release patched — the main supply-chain
+  # surface for this project, since the app itself has no NuGet dependencies.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5

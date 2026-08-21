@@ -55,6 +55,14 @@ Requires Windows 10/11 (x64). No runtime to install — everything is self-conta
 - Protected windows (DRM video, some banking apps) and a few UWP apps can't be mirrored.
 - Minimized source windows freeze until restored.
 
+## Privacy & security
+
+ShareSwitch has **no networking code whatsoever** — no telemetry, no analytics, no update checks. Nothing leaves your machine.
+
+It does install a global keyboard hook (that's how it sees the hotkey while another app has focus), so here's the honest detail: every key that isn't **Ctrl, Alt, Shift or Escape** is discarded inside the hook callback before any other code sees it. Nothing is stored or transmitted. The mouse hook only exists while you hold the combo. No admin rights required.
+
+Full explanation, threat model, and how to report a vulnerability: **[SECURITY.md](SECURITY.md)**
+
 ## Build from source
 
 ```

@@ -15,6 +15,15 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
+  <!-- Code quality: full analyzers + style enforcement.
+       Warnings stay warnings locally (so F5 always works) but CI runs with
+       -warnaserror, so nothing sloppy reaches main. -->
+  <PropertyGroup>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+  </PropertyGroup>
+
   <!-- App identity (Version is overridden by CI from the git tag on releases) -->
   <PropertyGroup>
     <Version>0.2.0</Version>

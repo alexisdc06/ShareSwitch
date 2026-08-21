@@ -61,10 +61,21 @@ public sealed class KeyboardHook : IDisposable
                 if (down || up)
                 {
                     var data = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
-                    var args = new KeyboardHookEventArgs { Key = (Keys)data.vkCode, IsDown = down };
-                    KeyEvent?.Invoke(this, args);
-                    if (args.Handled)
-                        return (IntPtr)1;
+                    var key = (Keys)data.vkCode;
+
+                    // PRIVACY BOUNDARY — do not weaken.
+                    // A low-level keyboard hook technically observes every keystroke.
+                    // We discard anything that is not a modifier or Escape *here*,
+                    // before the value is passed anywhere else, so no other part of
+                    // the program can ever see the keys you type. Nothing is stored,
+                    // buffered or transmitted; the app makes no network calls at all.
+                    if (IsRelevantKey(key))
+                    {
+                        var args = new KeyboardHookEventArgs { Key = key, IsDown = down };
+                        KeyEvent?.Invoke(this, args);
+                        if (args.Handled)
+                            return (IntPtr)1;
+                    }
                 }
             }
             catch
@@ -74,6 +85,20 @@ public sealed class KeyboardHook : IDisposable
         }
         return CallNextHookEx(_hook, nCode, wParam, lParam);
     }
+
+    /// <summary>
+    /// The only keys ShareSwitch is allowed to observe: the modifiers that can
+    /// form the selection combo, plus Escape to cancel. Everything else is
+    /// dropped inside the hook callback and never leaves this class.
+    /// </summary>
+    private static bool IsRelevantKey(Keys key) => key switch
+    {
+        Keys.ControlKey or Keys.LControlKey or Keys.RControlKey => true,
+        Keys.Menu or Keys.LMenu or Keys.RMenu => true,
+        Keys.ShiftKey or Keys.LShiftKey or Keys.RShiftKey => true,
+        Keys.Escape => true,
+        _ => false
+    };
 
     #region P/Invoke
 

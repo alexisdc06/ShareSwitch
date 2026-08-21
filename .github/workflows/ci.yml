@@ -15,5 +15,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Build
-        run: dotnet build ShareSwitch.csproj -c Release
+      - name: Build (warnings are errors)
+        run: dotnet build ShareSwitch.csproj -c Release -warnaserror
+
+      - name: Verify formatting
+        run: dotnet format ShareSwitch.csproj --verify-no-changes --severity warn
+        continue-on-error: true # advisory for now; flip to blocking once the codebase is clean
