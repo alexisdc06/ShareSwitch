@@ -13,7 +13,7 @@ everything else is either done or a 5-minute mechanical step.
    git remote add origin https://github.com/YOUR_USER/ShareSwitch.git
    git push -u origin main
    ```
-3. **Tell me your GitHub username** — I'll replace the `REPLACE_GITHUB_USER` placeholders in README.md and installer/ShareSwitch.iss (or search-replace yourself).
+3. **Tell me your GitHub username** — I'll replace the `alexisdc06` placeholders in README.md and installer/ShareSwitch.iss (or search-replace yourself).
 4. **First release**: after CI is green,
    ```
    git tag v0.2.0

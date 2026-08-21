@@ -15,7 +15,7 @@ AppId={{8F4E2C71-5A9B-4D3E-B7C2-A1E6F0D89B34}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#Publisher}
-AppPublisherURL=https://github.com/REPLACE_GITHUB_USER/ShareSwitch
+AppPublisherURL=https://github.com/alexisdc06/ShareSwitch
 DefaultDirName={autopf}\{#AppName}
 DisableProgramGroupPage=yes
 ; Per-user install: no UAC prompt, friendlier for an unsigned indie app.

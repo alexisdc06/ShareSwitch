@@ -12,8 +12,8 @@ No "Stop sharing → Share again" dance. No "can you see my screen now?"
 <!-- DESIGNER: hero demo GIF goes here (see docs/LAUNCH.md) -->
 <!-- ![Demo](assets/demo.gif) -->
 
-[![CI](https://github.com/REPLACE_GITHUB_USER/ShareSwitch/actions/workflows/ci.yml/badge.svg)](https://github.com/REPLACE_GITHUB_USER/ShareSwitch/actions)
-[![Release](https://img.shields.io/github/v/release/REPLACE_GITHUB_USER/ShareSwitch)](https://github.com/REPLACE_GITHUB_USER/ShareSwitch/releases/latest)
+[![CI](https://github.com/alexisdc06/ShareSwitch/actions/workflows/ci.yml/badge.svg)](https://github.com/alexisdc06/ShareSwitch/actions)
+[![Release](https://img.shields.io/github/v/release/alexisdc06/ShareSwitch)](https://github.com/alexisdc06/ShareSwitch/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 </div>
@@ -32,7 +32,7 @@ The mirror is powered by the Windows compositor (DWM thumbnails): pixel-perfect,
 
 ## Install
 
-**[⬇ Download the latest release](https://github.com/REPLACE_GITHUB_USER/ShareSwitch/releases/latest)**
+**[⬇ Download the latest release](https://github.com/alexisdc06/ShareSwitch/releases/latest)**
 
 - `ShareSwitch-Setup-x.y.z.exe` — installer (Start menu shortcut, optional autostart, uninstaller)
 - `ShareSwitch-x.y.z-portable.exe` — single portable exe, no install needed
@@ -58,7 +58,7 @@ Requires Windows 10/11 (x64). No runtime to install — everything is self-conta
 ## Build from source
 
 ```
-git clone https://github.com/REPLACE_GITHUB_USER/ShareSwitch
+git clone https://github.com/alexisdc06/ShareSwitch
 cd ShareSwitch
 dotnet build            # or open ShareSwitch.sln in Visual Studio 2022
 .\publish.ps1           # distributable exe + installer
