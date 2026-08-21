@@ -28,6 +28,12 @@ internal static class NativeMethods
     public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
     public const int DWMWA_CLOAKED = 14;
 
+    // Windows 11 (build 22000+) window chrome tinting.
+    public const int DWMWA_BORDER_COLOR = 34;
+    public const int DWMWA_CAPTION_COLOR = 35;
+    public const int DWMWA_TEXT_COLOR = 36;
+    public const uint DWMWA_COLOR_DEFAULT = 0xFFFFFFFF;
+
     public const uint SWP_NOACTIVATE = 0x0010;
     public const uint SWP_SHOWWINDOW = 0x0040;
 
@@ -106,6 +112,10 @@ internal static class NativeMethods
     public static extern int DwmGetWindowAttribute(IntPtr hWnd, int attribute,
         out RECT value, int size);
 
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmSetWindowAttribute(IntPtr hWnd, int attribute,
+        ref uint value, int size);
+
     #endregion
 
     #region Helpers
@@ -153,6 +163,36 @@ internal static class NativeMethods
         => ((long)GetWindowLongPtr(hWnd, GWL_EXSTYLE) & exStyle) != 0;
 
     public static bool IsKeyDown(int vKey) => (GetAsyncKeyState(vKey) & 0x8000) != 0;
+
+    /// <summary>Windows 11 introduced the chrome-tinting DWM attributes.</summary>
+    public static bool SupportsWindowChromeTinting
+        => Environment.OSVersion.Version.Build >= 22000;
+
+    /// <summary>
+    /// Tints the window's border, title bar and caption text. Non-client area
+    /// only, so it is <b>not</b> part of what a screen-share captures.
+    /// Pass null to restore the system default.
+    /// Returns false on Windows 10 and older, where the attributes don't exist.
+    /// </summary>
+    public static bool TrySetWindowChrome(IntPtr hWnd, Color? border, Color? caption, Color? text)
+    {
+        if (!SupportsWindowChromeTinting || hWnd == IntPtr.Zero) return false;
+
+        bool ok = true;
+        ok &= Apply(hWnd, DWMWA_BORDER_COLOR, border);
+        ok &= Apply(hWnd, DWMWA_CAPTION_COLOR, caption);
+        ok &= Apply(hWnd, DWMWA_TEXT_COLOR, text);
+        return ok;
+
+        static bool Apply(IntPtr hWnd, int attribute, Color? color)
+        {
+            // DWM expects 0x00BBGGRR, not ARGB.
+            uint value = color is { } c
+                ? (uint)(c.R | (c.G << 8) | (c.B << 16))
+                : DWMWA_COLOR_DEFAULT;
+            return DwmSetWindowAttribute(hWnd, attribute, ref value, sizeof(uint)) == 0;
+        }
+    }
 
     #endregion
 }

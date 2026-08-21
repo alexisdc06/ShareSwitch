@@ -21,13 +21,18 @@ public class TrayApplicationContext : ApplicationContext
     private readonly NotifyIcon _trayIcon;
     private readonly SelectionController _selectionController;
     private readonly ToolStripMenuItem _hotkeyMenu;
+    private readonly ToolStripMenuItem _statusItem;
     private ShareWindow? _shareWindow;
 
     public TrayApplicationContext()
     {
         _hotkeyMenu = BuildHotkeyMenu();
 
+        _statusItem = new ToolStripMenuItem("No source selected") { Enabled = false };
+
         var menu = new ContextMenuStrip();
+        menu.Items.Add(_statusItem);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Show Share Window", null, (_, _) => ShowShareWindow());
         menu.Items.Add("Select Window…", null, (_, _) => ShowWindowPicker());
         menu.Items.Add(_hotkeyMenu);
@@ -75,7 +80,11 @@ public class TrayApplicationContext : ApplicationContext
     private ShareWindow GetOrCreateShareWindow()
     {
         if (_shareWindow == null || _shareWindow.IsDisposed)
+        {
             _shareWindow = new ShareWindow();
+            _shareWindow.SourceChanged += (_, _) => UpdateStatus();
+            UpdateStatus();
+        }
         return _shareWindow;
     }
 
@@ -86,6 +95,20 @@ public class TrayApplicationContext : ApplicationContext
         if (w.WindowState == FormWindowState.Minimized)
             w.WindowState = FormWindowState.Normal;
         w.Activate();
+    }
+
+    /// <summary>Keeps the tray menu header and tooltip showing the live source.</summary>
+    private void UpdateStatus()
+    {
+        string status = _shareWindow is { IsDisposed: false }
+            ? _shareWindow.StatusText
+            : "No source selected";
+
+        _statusItem.Text = status;
+
+        // NotifyIcon.Text is capped at 63 characters by Windows.
+        string tip = $"ShareSwitch — {status}";
+        _trayIcon.Text = tip.Length > 63 ? tip[..60] + "…" : tip;
     }
 
     private void ShowWindowPicker()
