@@ -92,14 +92,16 @@ public sealed class HighlightOverlay : Form
 
         if (!Visible)
         {
-            // Show without activating, so focus stays where the user left it.
-            NativeMethods.SetWindowPos(Handle, IntPtr.Zero, bounds.X, bounds.Y,
-                bounds.Width, bounds.Height,
-                NativeMethods.SWP_SHOWWINDOW | NativeMethods.SWP_NOACTIVATE);
-        }
+            // Must go through Show(), not SetWindowPos(SWP_SHOWWINDOW): showing
+            // the window behind WinForms' back leaves Visible == false, and then
+            // Hide() silently does nothing — which is exactly how the frame used
+            // to get stuck on screen. ShowWithoutActivation + WS_EX_NOACTIVATE
+            // already guarantee focus is never stolen.
+            Show();
 
-        _lifetimeGuard.Stop();
-        _lifetimeGuard.Start(); // restart the failsafe on every refresh
+            _lifetimeGuard.Stop();
+            _lifetimeGuard.Start(); // failsafe: never visible longer than this
+        }
 
         if (changed) Invalidate();
     }
@@ -118,7 +120,12 @@ public sealed class HighlightOverlay : Form
         _fadeTimer.Stop();
         _lifetimeGuard.Stop();
         _fadeStep = 0;
-        if (Visible) Hide();
+        _title = string.Empty;
+
+        // Unconditional: never trust a cached visibility flag to decide whether
+        // the frame needs hiding.
+        if (IsHandleCreated) Hide();
+        Opacity = 1.0; // reset for the next show
     }
 
     private void OnFadeTick(object? sender, EventArgs e)
