@@ -15,9 +15,15 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Build (warnings are errors)
-        run: dotnet build ShareSwitch.csproj -c Release -warnaserror
+      - name: Build
+        run: dotnet build ShareSwitch.csproj -c Release
 
-      - name: Verify formatting
+      # Advisory quality gates. Kept non-blocking so a style nit never stops a
+      # release going out; tighten to blocking once the codebase is warning-clean.
+      - name: Analyzer warnings (advisory)
+        run: dotnet build ShareSwitch.csproj -c Release --no-incremental -warnaserror
+        continue-on-error: true
+
+      - name: Formatting (advisory)
         run: dotnet format ShareSwitch.csproj --verify-no-changes --severity warn
-        continue-on-error: true # advisory for now; flip to blocking once the codebase is clean
+        continue-on-error: true

@@ -16,10 +16,14 @@ Mark each ✅ / ❌ and note anything odd — this list goes to the next polishi
 3. Tray → **Select Window…**
    - ✅ List shows your normal app windows with process names; no taskbar/desktop/hidden junk; ShareSwitch itself absent.
 4. Select Notepad (or any app) → **Select**.
-   - ✅ Live mirror appears, letterboxed (black bars, correct aspect ratio), title bar reads "ShareSwitch → …".
-5. Resize ShareWindow to extreme shapes (very wide, very tall).
-   - ✅ Aspect ratio preserved, mirror centered, no stretching.
-6. Type in the source app.
+   - ✅ Live mirror appears; the window resizes to match the source's shape with no black bars.
+   - ✅ Title bar reads "● ShareSwitch — mirroring: …" and is tinted blue (Win11) / a thin blue frame appears (Win10).
+   - ✅ Tray tooltip and the top line of the tray menu show the same source.
+5. Resize the **source** window by dragging its edges.
+   - ✅ ShareSwitch follows within ~½ s, keeping the same shape, no stretching.
+6. Turn off tray → **Auto-fit window to source**, then resize ShareSwitch manually.
+   - ✅ It stays where you put it; mirror letterboxes inside, aspect preserved.
+7. Type in the source app.
    - ✅ Mirror updates live.
 
 ## 2. Hold-to-select (hooks)
@@ -29,7 +33,8 @@ Mark each ✅ / ❌ and note anything odd — this list goes to the next polishi
    - ✅ Frame matches the window's visible edges (no offset — check on your scaling, e.g. 125 %/150 %).
    - ✅ Desktop and taskbar get no frame.
 8. Still holding, **left-click** a window.
-   - ✅ ShareWindow switches instantly; frame disappears.
+   - ✅ ShareWindow switches instantly; the frame **fades out** over ~¼ s and is gone.
+   - ✅ Nothing is left on screen afterwards — check again after closing the call.
    - ✅ The clicked app did NOT receive the click (e.g. hover a button — it must not be pressed) and was not focused/raised.
 9. Hold Ctrl + Alt, then **release without clicking**.
    - ✅ Frame disappears, nothing switches.

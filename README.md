@@ -23,10 +23,12 @@ No "Stop sharing → Share again" dance. No "can you see my screen now?"
 ShareSwitch opens one **proxy window** that mirrors any other window live. You share the proxy in your call once. From then on:
 
 1. **Hold `Ctrl + Alt`** — the window under your mouse gets a highlight frame
-2. **Left-click** — the proxy instantly mirrors that window instead
+2. **Left-click** — the proxy instantly mirrors that window instead, and the frame fades away
 3. Release. Your viewers never noticed a transition.
 
 Prefer a list? Right-click the tray icon → **Select Window…**
+
+The proxy window resizes itself to match whatever it's mirroring, so viewers never see letterbox bars. Its title bar and border are tinted blue so you can always tell it apart from the real app — and on Windows 11 that tint lives in the window chrome, which screen-sharing doesn't capture, so your viewers only see clean content.
 
 The mirror is powered by the Windows compositor (DWM thumbnails): pixel-perfect, live, and essentially zero CPU overhead.
 
@@ -42,6 +44,8 @@ Requires Windows 10/11 (x64). No runtime to install — everything is self-conta
 > **SmartScreen note:** the binaries aren't code-signed yet, so Windows may show
 > "Windows protected your PC" → click *More info* → *Run anyway*. You can also
 > build from source (below).
+
+ShareSwitch is in early testing — [feedback and bug reports](https://github.com/alexisdc06/ShareSwitch/issues) are very welcome. See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Usage tips
 
