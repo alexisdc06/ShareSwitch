@@ -40,6 +40,16 @@ public sealed class SelectionController : IDisposable
     private bool _selecting;
     private IntPtr _hoveredHwnd = IntPtr.Zero;
 
+    /// <summary>Windows assigned to modifier + 1…9.</summary>
+    public WindowSlots Slots { get; } = new();
+
+    /// <summary>
+    /// Window list captured when cycling starts, so the order can't shift under
+    /// the user while they step through it. Cleared when the combo is released.
+    /// </summary>
+    private List<WindowEnumerator.WindowInfo>? _cycleSnapshot;
+    private int _cycleIndex = -1;
+
     /// <param name="getShareWindow">Returns the current ShareWindow (creating it
     /// if needed) — the tray context owns its lifetime.</param>
     public SelectionController(Func<ShareWindow> getShareWindow)
@@ -94,6 +104,13 @@ public sealed class SelectionController : IDisposable
 
         Keys held = GetHeldModifiers(e);
 
+        // Slot / cycle shortcuts fire on key-down while the combo is held.
+        if (e.IsDown && (held & required) == required && HandleActionKey(e.Key, held, required))
+        {
+            e.Handled = true; // don't let the shortcut reach the focused app
+            return;
+        }
+
         if (!_comboHeld && held == required)
         {
             // Exact match required: holding extra modifiers (e.g. Ctrl+Alt+Shift
@@ -106,8 +123,122 @@ public sealed class SelectionController : IDisposable
         {
             _comboHeld = false;
             _activationTimer.Stop();
+            _cycleSnapshot = null; // fresh window list next time
+            _cycleIndex = -1;
             if (_selecting)
                 ExitSelectionMode();
+        }
+    }
+
+    #endregion
+
+    #region Shortcut handling and modifier state
+
+    /// <summary>
+    /// Handles the shortcuts available while the combo is held:
+    /// <list type="bullet">
+    /// <item>modifier + 1…9 — switch to the window assigned to that slot</item>
+    /// <item>modifier + Shift + 1…9 — assign the window under the cursor to that slot</item>
+    /// <item>modifier + ← / → — step through open windows</item>
+    /// </list>
+    /// </summary>
+    /// <returns>true if the key was consumed.</returns>
+    private bool HandleActionKey(Keys key, Keys held, Keys required)
+    {
+        int slot = WindowSlots.IndexFromKey(key);
+        if (slot >= 0)
+        {
+            if (!AppSettings.Current.EnableSlotShortcuts) return false;
+
+            // Shift is the "modify" modifier — but only when it isn't already
+            // part of the user's own combo, which would make assign and recall
+            // indistinguishable.
+            bool assigning = !required.HasFlag(Keys.Shift) && held.HasFlag(Keys.Shift);
+            return assigning ? AssignHoveredToSlot(slot) : RecallSlot(slot);
+        }
+
+        if (key is Keys.Left or Keys.Right)
+        {
+            if (!AppSettings.Current.EnableCycleShortcuts) return false;
+            return Cycle(key == Keys.Right ? 1 : -1);
+        }
+
+        return false;
+    }
+
+    private bool AssignHoveredToSlot(int slot)
+    {
+        IntPtr target = _selecting && _hoveredHwnd != IntPtr.Zero
+            ? _hoveredHwnd
+            : WindowEnumerator.GetTopLevelWindowAt(Cursor.Position);
+
+        if (target == IntPtr.Zero || !WindowEnumerator.IsCaptureCandidate(target))
+            return false;
+
+        string title = NativeMethods.GetWindowTitle(target);
+        Slots.Assign(slot, target, title);
+        SwitchTo(target, title);
+        return true;
+    }
+
+    private bool RecallSlot(int slot)
+    {
+        if (!Slots.TryGet(slot, out IntPtr hwnd, out string title)) return false;
+        SwitchTo(hwnd, title);
+        return true;
+    }
+
+    /// <summary>
+    /// Steps through the open windows. The list is snapshotted on the first
+    /// press so it can't reorder mid-sequence; releasing the combo resets it.
+    /// </summary>
+    private bool Cycle(int direction)
+    {
+        if (_cycleSnapshot is null)
+        {
+            _cycleSnapshot = WindowEnumerator.GetCaptureCandidates();
+            if (_cycleSnapshot.Count == 0)
+            {
+                _cycleSnapshot = null;
+                return false;
+            }
+
+            // Start from whatever is currently mirrored, so the first press
+            // moves one step away from it rather than jumping arbitrarily.
+            IntPtr current = _getShareWindow().SourceHwnd;
+            _cycleIndex = _cycleSnapshot.FindIndex(w => w.Hwnd == current);
+        }
+
+        // Skip windows that have closed since the snapshot was taken.
+        for (int attempt = 0; attempt < _cycleSnapshot.Count; attempt++)
+        {
+            _cycleIndex = ((_cycleIndex + direction) % _cycleSnapshot.Count + _cycleSnapshot.Count)
+                          % _cycleSnapshot.Count;
+
+            var candidate = _cycleSnapshot[_cycleIndex];
+            if (NativeMethods.IsWindow(candidate.Hwnd))
+            {
+                SwitchTo(candidate.Hwnd, candidate.Title);
+                return true;
+            }
+        }
+
+        _cycleSnapshot = null;
+        return false;
+    }
+
+    /// <summary>Switches the mirror and flashes the confirmation frame.</summary>
+    private void SwitchTo(IntPtr hwnd, string title)
+    {
+        // The user is driving by keyboard now, so stop the cursor-following
+        // highlight — otherwise the next tracking tick would immediately pull
+        // the frame back onto whatever the mouse happens to be over.
+        ExitSelectionMode();
+
+        if (_getShareWindow().SetSource(hwnd, title))
+        {
+            _overlay.ShowOn(hwnd, title);
+            _overlay.FadeOut();
         }
     }
 

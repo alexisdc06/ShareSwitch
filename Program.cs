@@ -16,6 +16,7 @@ internal static class Program
         }
 
         ApplicationConfiguration.Initialize(); // DPI mode comes from the .csproj
+        AppSettings.Load();
 
         // Surface unexpected UI-thread exceptions instead of dying silently in the tray.
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -29,6 +30,7 @@ internal static class Program
         }
         finally
         {
+            AppSettings.Save();
             mutex.ReleaseMutex();
         }
     }

@@ -28,6 +28,17 @@ ShareSwitch opens one **proxy window** that mirrors any other window live. You s
 
 Prefer a list? Right-click the tray icon → **Select Window…**
 
+**Even faster, once you're set up:**
+
+| Shortcut | Does |
+|---|---|
+| `Ctrl + Alt` + click | Mirror the window you click |
+| `Ctrl + Alt + Shift` + `1…9` | Assign the window under your cursor to a number |
+| `Ctrl + Alt` + `1…9` | Jump straight to that window, from anywhere |
+| `Ctrl + Alt` + `←` / `→` | Step through your open windows |
+
+Settings (including **Start with Windows**) live in the tray menu → *Settings…*, never inside the shared window — that window stays pure content so your viewers never see app UI.
+
 The proxy window resizes itself to match whatever it's mirroring, so viewers never see letterbox bars. Its title bar and border are tinted blue so you can always tell it apart from the real app — and on Windows 11 that tint lives in the window chrome, which screen-sharing doesn't capture, so your viewers only see clean content.
 
 The mirror is powered by the Windows compositor (DWM thumbnails): pixel-perfect, live, and essentially zero CPU overhead.

@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.4.0 — 2026-08-21
+
+**Added**
+
+- **Settings window** (tray → *Settings…*), including a **Start with Windows**
+  toggle. Preferences now persist in `%APPDATA%\ShareSwitch\settings.json`.
+- **Number shortcuts**: `Ctrl+Alt+Shift+1…9` assigns the window under your
+  cursor to a number; `Ctrl+Alt+1…9` then switches to it instantly from
+  anywhere — no need to focus ShareSwitch first.
+- **Cycle shortcuts**: `Ctrl+Alt+←` / `→` steps through open windows. The list
+  is snapshotted when you start cycling, so it can't reorder under you mid-call.
+- Both shortcut families can be turned off in Settings.
+
+**Changed**
+
+- Tray menu simplified — options moved into the Settings window.
+- The keyboard hook now also observes digits and arrows, but **only while a
+  modifier is physically held**; ordinary typing is still discarded inside the
+  hook. See `SECURITY.md`.
+
+**Design note**
+
+Settings deliberately live in their own window rather than a menu bar inside the
+share window: that window's content is exactly what your viewers see, so it stays
+pure content forever.
+
 ## v0.3.0 — 2026-08-21
 
 First version shared for real-world testing.

@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Windows.Forms;
 using ShareSwitch.Selection;
 
@@ -7,27 +6,20 @@ namespace ShareSwitch;
 /// <summary>
 /// Application root: owns the tray icon, the ShareWindow and the
 /// SelectionController, and tears everything down on exit.
+///
+/// The tray menu is the app's only chrome by design — ShareWindow's content is
+/// exactly what a screen share captures, so no application UI may live there.
 /// </summary>
 public class TrayApplicationContext : ApplicationContext
 {
-    private static readonly (string Label, Keys Modifiers)[] HotkeyChoices =
-    {
-        ("Ctrl + Alt", Keys.Control | Keys.Alt),
-        ("Ctrl + Shift", Keys.Control | Keys.Shift),
-        ("Alt + Shift", Keys.Alt | Keys.Shift),
-        ("Ctrl + Alt + Shift", Keys.Control | Keys.Alt | Keys.Shift),
-    };
-
     private readonly NotifyIcon _trayIcon;
     private readonly SelectionController _selectionController;
-    private readonly ToolStripMenuItem _hotkeyMenu;
     private readonly ToolStripMenuItem _statusItem;
     private ShareWindow? _shareWindow;
+    private SettingsForm? _settingsForm;
 
     public TrayApplicationContext()
     {
-        _hotkeyMenu = BuildHotkeyMenu();
-
         _statusItem = new ToolStripMenuItem("No source selected") { Enabled = false };
 
         var menu = new ContextMenuStrip();
@@ -35,28 +27,15 @@ public class TrayApplicationContext : ApplicationContext
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Show Share Window", null, (_, _) => ShowShareWindow());
         menu.Items.Add("Select Window…", null, (_, _) => ShowWindowPicker());
-        menu.Items.Add(_hotkeyMenu);
-
-        var autoFitItem = new ToolStripMenuItem("Auto-fit window to source")
-        {
-            Checked = AppSettings.Current.AutoFitToSource,
-            CheckOnClick = true
-        };
-        autoFitItem.CheckedChanged += (sender, _) =>
-        {
-            AppSettings.Current.AutoFitToSource = ((ToolStripMenuItem)sender!).Checked;
-            AppSettings.Current.NotifyChanged();
-        };
-        menu.Items.Add(autoFitItem);
-
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Settings…", null, (_, _) => ShowSettings());
         menu.Items.Add("Exit", null, (_, _) => ExitApplication());
 
         _trayIcon = new NotifyIcon
         {
             Icon = AppIcon.Get(),
             Visible = true,
-            Text = "ShareSwitch — window share proxy",
+            Text = "ShareSwitch",
             ContextMenuStrip = menu
         };
         _trayIcon.DoubleClick += (_, _) => ShowShareWindow();
@@ -122,28 +101,21 @@ public class TrayApplicationContext : ApplicationContext
         }
     }
 
-    private ToolStripMenuItem BuildHotkeyMenu()
+    private void ShowSettings()
     {
-        var root = new ToolStripMenuItem("Selection Hotkey");
-
-        foreach (var (label, modifiers) in HotkeyChoices)
+        if (_settingsForm is { IsDisposed: false })
         {
-            var item = new ToolStripMenuItem(label)
-            {
-                Checked = AppSettings.Current.SelectionModifiers == modifiers,
-                Tag = modifiers
-            };
-            item.Click += (sender, _) =>
-            {
-                AppSettings.Current.SelectionModifiers = (Keys)((ToolStripMenuItem)sender!).Tag!;
-                AppSettings.Current.NotifyChanged();
-                foreach (ToolStripMenuItem mi in root.DropDownItems)
-                    mi.Checked = (Keys)mi.Tag! == AppSettings.Current.SelectionModifiers;
-            };
-            root.DropDownItems.Add(item);
+            _settingsForm.Activate();
+            return;
         }
 
-        return root;
+        _settingsForm = new SettingsForm(_selectionController.Slots);
+        _settingsForm.FormClosed += (_, _) =>
+        {
+            AppSettings.Save(); // persist as soon as the user is done fiddling
+            _settingsForm = null;
+        };
+        _settingsForm.Show();
     }
 
     private void ExitApplication()
@@ -151,12 +123,15 @@ public class TrayApplicationContext : ApplicationContext
         _trayIcon.Visible = false;
         _selectionController.Dispose(); // uninstalls hooks before UI teardown
 
+        _settingsForm?.Close();
+
         if (_shareWindow is { IsDisposed: false })
         {
             _shareWindow.AllowClose = true;
             _shareWindow.Close();
         }
 
+        AppSettings.Save();
         Application.Exit();
     }
 
@@ -166,6 +141,7 @@ public class TrayApplicationContext : ApplicationContext
         {
             _selectionController.Dispose(); // idempotent
             _trayIcon.Dispose();
+            _settingsForm?.Dispose();
             _shareWindow?.Dispose();
         }
         base.Dispose(disposing);

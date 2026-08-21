@@ -47,6 +47,30 @@ Mark each ✅ / ❌ and note anything odd — this list goes to the next polishi
 13. AZERTY check: type `@ # { [` (AltGr) in any editor at normal speed.
     - ✅ Characters typed normally; at most a brief frame flash if AltGr held long.
 
+## 2b. Slots and cycling
+
+14. Hold **Ctrl+Alt+Shift**, hover a window, press **1**. Repeat with another window and **2**.
+    - ✅ Each press switches the mirror and flashes the frame on that window.
+15. Release everything. Now press **Ctrl+Alt+1**, then **Ctrl+Alt+2**, while focused in a *different* app.
+    - ✅ Mirror jumps between the two assigned windows; the focused app never receives the digit.
+16. Press **Ctrl+Alt+→** several times, then **←**.
+    - ✅ Steps through open windows; order stays consistent within one hold, even if you open/close an app meanwhile.
+17. Close one of the assigned apps, then press its number.
+    - ✅ Nothing happens (dead slot ignored, no crash); the slot shows as unassigned in Settings.
+18. Type normally in an editor: digits, arrows, passwords.
+    - ✅ Everything types correctly — shortcuts only bind while the modifiers are held.
+
+## 2c. Settings and startup
+
+19. Tray → **Settings…**
+    - ✅ Opens a separate window (never inside the share window); shows assigned slots 1–9.
+20. Tick **Start ShareSwitch when Windows starts**, close, reopen Settings.
+    - ✅ Still ticked. (Verify in Task Manager → Startup, or `shell:startup` registry Run key.)
+21. Change the hotkey, close the app entirely, relaunch.
+    - ✅ Setting persisted (`%APPDATA%\ShareSwitch\settings.json`).
+22. Untick both shortcut families.
+    - ✅ Number/arrow shortcuts stop working; hold-and-click still works.
+
 ## 3. Hotkey configuration
 
 14. Tray → **Selection Hotkey** → Ctrl + Shift.

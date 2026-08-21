@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using ShareSwitch.Interop;
 
 namespace ShareSwitch.Hooks;
 
@@ -87,16 +88,38 @@ public sealed class KeyboardHook : IDisposable
     }
 
     /// <summary>
-    /// The only keys ShareSwitch is allowed to observe: the modifiers that can
-    /// form the selection combo, plus Escape to cancel. Everything else is
-    /// dropped inside the hook callback and never leaves this class.
+    /// The keys ShareSwitch is allowed to observe. Everything else is dropped
+    /// inside the hook callback and never leaves this class.
+    ///
+    /// Modifiers and Escape always pass, because they drive selection mode.
+    /// Action keys (digits and arrows, used for slot and cycle shortcuts) pass
+    /// <b>only while a modifier is physically held</b> — so ordinary typing is
+    /// still discarded immediately, before any other code can see it.
     /// </summary>
-    private static bool IsRelevantKey(Keys key) => key switch
+    private static bool IsRelevantKey(Keys key)
     {
-        Keys.ControlKey or Keys.LControlKey or Keys.RControlKey => true,
-        Keys.Menu or Keys.LMenu or Keys.RMenu => true,
-        Keys.ShiftKey or Keys.LShiftKey or Keys.RShiftKey => true,
-        Keys.Escape => true,
+        switch (key)
+        {
+            case Keys.ControlKey or Keys.LControlKey or Keys.RControlKey:
+            case Keys.Menu or Keys.LMenu or Keys.RMenu:
+            case Keys.ShiftKey or Keys.LShiftKey or Keys.RShiftKey:
+            case Keys.Escape:
+                return true;
+        }
+
+        if (!IsActionKey(key)) return false;
+
+        // Gate: no modifier held → this is ordinary typing, discard it.
+        return NativeMethods.IsKeyDown(NativeMethods.VK_CONTROL)
+            || NativeMethods.IsKeyDown(NativeMethods.VK_MENU)
+            || NativeMethods.IsKeyDown(NativeMethods.VK_SHIFT);
+    }
+
+    private static bool IsActionKey(Keys key) => key switch
+    {
+        >= Keys.D1 and <= Keys.D9 => true,
+        >= Keys.NumPad1 and <= Keys.NumPad9 => true,
+        Keys.Left or Keys.Right => true,
         _ => false
     };
 

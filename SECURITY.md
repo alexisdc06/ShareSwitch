@@ -16,9 +16,16 @@ another application has focus — that's the entire feature.
 
 How the risk is contained, in code you can audit:
 
-- `Hooks/KeyboardHook.cs` discards every key that is not **Ctrl, Alt, Shift or Escape**
-  inside the hook callback itself, before the value is passed to any other code
-  (see the `IsRelevantKey` filter and the `PRIVACY BOUNDARY` comment).
+- `Hooks/KeyboardHook.cs` discards keys inside the hook callback itself, before
+  the value is passed to any other code (see the `IsRelevantKey` filter and the
+  `PRIVACY BOUNDARY` comment). Only two categories survive:
+  - **Ctrl, Alt, Shift and Escape** — always, since they drive selection mode.
+  - **Digits 1–9 and the ← / → arrows** — *only while a modifier key is
+    physically held*, because they trigger the slot and cycle shortcuts. When
+    you are typing normally, with no modifier down, they are discarded like
+    everything else.
+- No other key ever leaves the hook. Letters, numbers typed without a modifier,
+  passwords, and clipboard contents are never observed.
 - Nothing is written to disk, buffered in memory, or transmitted.
 - The mouse hook (`WH_MOUSE_LL`) is installed **only while you hold the combo** and
   uninstalled the moment you release it.
