@@ -6,28 +6,30 @@ using ShareSwitch.Interop;
 namespace ShareSwitch.Selection;
 
 /// <summary>
-/// Borderless, topmost, click-through frame that <b>flashes once</b> over the
-/// window you just picked, then fades out on its own.
+/// Borderless, topmost, click-through frame drawn around the window the user is
+/// about to pick. It follows the cursor during selection, then <b>fades out</b>
+/// once a window has been chosen so it never lingers on screen.
 ///
-/// Self-limiting by design: the overlay starts its own countdown the moment it
-/// becomes visible, so it can never remain stuck on screen even if selection
-/// mode ends abnormally (missed key-up, dropped hook, app losing focus).
+/// Safety: whenever it is visible a max-lifetime watchdog runs, so the frame
+/// cannot stay stuck even if selection mode ends abnormally (missed key-up,
+/// dropped hook, app losing focus).
 ///
-/// WS_EX_TRANSPARENT keeps it invisible to WindowFromPoint; WS_EX_NOACTIVATE
-/// means it never steals focus from the call you're presenting in.
+/// WS_EX_TRANSPARENT keeps it invisible to WindowFromPoint (so it is never its
+/// own selection target); WS_EX_NOACTIVATE means it never steals focus from the
+/// call being presented.
 /// </summary>
 public sealed class HighlightOverlay : Form
 {
     private static readonly Color BorderColor = Color.FromArgb(0, 170, 255);
     private const int BorderThickness = 4;
 
-    // ~30 ms per tick: hold at full opacity, then fade out.
-    private const int TickMs = 30;
-    private const int HoldTicks = 7;  // ~210 ms
-    private const int FadeTicks = 8;  // ~240 ms
+    private const int FadeTickMs = 25;
+    private const int FadeTicks = 10;      // ~250 ms fade-out
+    private const int MaxLifetimeMs = 30_000; // failsafe, never normally reached
 
-    private readonly System.Windows.Forms.Timer _timer;
-    private int _tick;
+    private readonly System.Windows.Forms.Timer _fadeTimer;
+    private readonly System.Windows.Forms.Timer _lifetimeGuard;
+    private int _fadeStep;
     private string _title = string.Empty;
 
     public HighlightOverlay()
@@ -46,8 +48,11 @@ public sealed class HighlightOverlay : Form
                | ControlStyles.UserPaint
                | ControlStyles.OptimizedDoubleBuffer, true);
 
-        _timer = new System.Windows.Forms.Timer { Interval = TickMs };
-        _timer.Tick += OnTick;
+        _fadeTimer = new System.Windows.Forms.Timer { Interval = FadeTickMs };
+        _fadeTimer.Tick += OnFadeTick;
+
+        _lifetimeGuard = new System.Windows.Forms.Timer { Interval = MaxLifetimeMs };
+        _lifetimeGuard.Tick += (_, _) => HideNow();
     }
 
     protected override bool ShowWithoutActivation => true;
@@ -65,50 +70,66 @@ public sealed class HighlightOverlay : Form
     }
 
     /// <summary>
-    /// Flashes the confirmation frame over <paramref name="hWnd"/>.
-    /// Safe to call repeatedly; a new flash restarts the countdown.
+    /// Moves the frame onto <paramref name="hWnd"/> at full opacity.
+    /// Called repeatedly while the cursor moves between windows.
     /// </summary>
-    public void Flash(IntPtr hWnd, string title)
+    public void ShowOn(IntPtr hWnd, string title)
     {
         var bounds = NativeMethods.GetVisibleWindowBounds(hWnd);
-        if (bounds.Width <= 0 || bounds.Height <= 0) return;
-
-        _title = title;
-        _tick = 0;
-        Bounds = bounds;
-        Opacity = 1.0;
-
-        // Show without activating, so focus stays where the user left it.
-        NativeMethods.SetWindowPos(Handle, IntPtr.Zero, bounds.X, bounds.Y,
-            bounds.Width, bounds.Height,
-            NativeMethods.SWP_SHOWWINDOW | NativeMethods.SWP_NOACTIVATE);
-
-        Invalidate();
-        _timer.Start();
-    }
-
-    /// <summary>Cancels any in-flight flash immediately (used on shutdown).</summary>
-    public void HideNow()
-    {
-        _timer.Stop();
-        _tick = 0;
-        if (Visible) Hide();
-    }
-
-    private void OnTick(object? sender, EventArgs e)
-    {
-        _tick++;
-
-        if (_tick <= HoldTicks) return;
-
-        int fadeStep = _tick - HoldTicks;
-        if (fadeStep >= FadeTicks)
+        if (bounds.Width <= 0 || bounds.Height <= 0)
         {
             HideNow();
             return;
         }
 
-        Opacity = 1.0 - (double)fadeStep / FadeTicks;
+        _fadeTimer.Stop();
+        _fadeStep = 0;
+
+        bool changed = _title != title || Bounds != bounds;
+        _title = title;
+        Bounds = bounds;
+        Opacity = 1.0;
+
+        if (!Visible)
+        {
+            // Show without activating, so focus stays where the user left it.
+            NativeMethods.SetWindowPos(Handle, IntPtr.Zero, bounds.X, bounds.Y,
+                bounds.Width, bounds.Height,
+                NativeMethods.SWP_SHOWWINDOW | NativeMethods.SWP_NOACTIVATE);
+        }
+
+        _lifetimeGuard.Stop();
+        _lifetimeGuard.Start(); // restart the failsafe on every refresh
+
+        if (changed) Invalidate();
+    }
+
+    /// <summary>Fades the frame out — the confirmation that a window was picked.</summary>
+    public void FadeOut()
+    {
+        if (!Visible) return;
+        _fadeStep = 0;
+        _fadeTimer.Start();
+    }
+
+    /// <summary>Hides immediately (cancel, shutdown, invalid target).</summary>
+    public void HideNow()
+    {
+        _fadeTimer.Stop();
+        _lifetimeGuard.Stop();
+        _fadeStep = 0;
+        if (Visible) Hide();
+    }
+
+    private void OnFadeTick(object? sender, EventArgs e)
+    {
+        _fadeStep++;
+        if (_fadeStep >= FadeTicks)
+        {
+            HideNow();
+            return;
+        }
+        Opacity = 1.0 - (double)_fadeStep / FadeTicks;
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -139,7 +160,11 @@ public sealed class HighlightOverlay : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) _timer.Dispose();
+        if (disposing)
+        {
+            _fadeTimer.Dispose();
+            _lifetimeGuard.Dispose();
+        }
         base.Dispose(disposing);
     }
 }

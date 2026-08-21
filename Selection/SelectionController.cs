@@ -8,16 +8,17 @@ namespace ShareSwitch.Selection;
 /// Orchestrates hold-to-select mode:
 ///
 ///   hold the configured modifier combo (default Ctrl+Alt)
-///     → ShareWindow becomes click-through and the mouse hook is installed
-///   left-click any window → it becomes the mirrored source; a confirmation
-///     frame flashes once over it and fades out
+///     → ShareWindow becomes click-through, the mouse hook is installed, and a
+///       highlight frame follows the window under the cursor
+///   left-click any window → it becomes the mirrored source and the frame fades
+///     out, so nothing lingers on screen
 ///   release the combo, or press Esc → cancel
 ///
-/// Deliberately does <b>no work on mouse movement</b>. An earlier version drew a
-/// highlight frame that followed the cursor, which meant repainting a form from
-/// inside the low-level mouse hook callback — visually noisy, and slow enough
-/// that Windows could silently drop the hook (leaving the frame stuck on screen).
-/// Now the hook only reacts to a click, and the frame is self-expiring.
+/// The frame is driven by a UI timer polling the cursor position, <b>not</b> by
+/// the mouse hook. Repainting a form from inside a low-level hook callback can
+/// exceed the Windows hook timeout, at which point Windows silently unhooks —
+/// which used to leave the frame orphaned on screen. The hook now only handles
+/// clicks, which are rare and cheap.
 ///
 /// The keyboard hook is always installed; the mouse hook only while selecting.
 /// A short activation delay avoids triggering on AltGr (reported as Ctrl+Alt on
@@ -32,10 +33,12 @@ public sealed class SelectionController : IDisposable
     private readonly HighlightOverlay _overlay = new();
     private readonly System.Windows.Forms.Timer _activationTimer = new();
     private readonly System.Windows.Forms.Timer _safetyTimer = new() { Interval = 200 };
+    private readonly System.Windows.Forms.Timer _trackTimer = new() { Interval = 30 };
     private readonly Func<ShareWindow> _getShareWindow;
 
     private bool _comboHeld;
     private bool _selecting;
+    private IntPtr _hoveredHwnd = IntPtr.Zero;
 
     /// <param name="getShareWindow">Returns the current ShareWindow (creating it
     /// if needed) — the tray context owns its lifetime.</param>
@@ -63,6 +66,8 @@ public sealed class SelectionController : IDisposable
                 ExitSelectionMode();
             }
         };
+
+        _trackTimer.Tick += (_, _) => UpdateHoverHighlight();
     }
 
     /// <summary>Installs the global keyboard hook. Call once at startup.</summary>
@@ -161,18 +166,46 @@ public sealed class SelectionController : IDisposable
         }
 
         _selecting = true;
+        _hoveredHwnd = IntPtr.Zero;
         _safetyTimer.Start();
+        _trackTimer.Start();
         _getShareWindow().SetClickThrough(true);
+        UpdateHoverHighlight(); // paint immediately, don't wait for the first tick
     }
 
-    private void ExitSelectionMode()
+    /// <param name="fadeOverlay">true when a window was picked (fade as
+    /// confirmation); false on cancel, where the frame should just vanish.</param>
+    private void ExitSelectionMode(bool fadeOverlay = false)
     {
         if (!_selecting) return;
 
         _selecting = false;
+        _trackTimer.Stop();
         _safetyTimer.Stop();
         _mouseHook.Uninstall();
+        _hoveredHwnd = IntPtr.Zero;
         _getShareWindow().SetClickThrough(false);
+
+        if (fadeOverlay) _overlay.FadeOut();
+        else _overlay.HideNow();
+    }
+
+    /// <summary>Moves the highlight onto whatever valid window is under the cursor.</summary>
+    private void UpdateHoverHighlight()
+    {
+        if (!_selecting) return;
+
+        IntPtr root = WindowEnumerator.GetTopLevelWindowAt(Cursor.Position);
+
+        if (root == IntPtr.Zero || !WindowEnumerator.IsCaptureCandidate(root))
+        {
+            _hoveredHwnd = IntPtr.Zero;
+            _overlay.HideNow();
+            return;
+        }
+
+        _hoveredHwnd = root;
+        _overlay.ShowOn(root, NativeMethods.GetWindowTitle(root));
     }
 
     private void OnLeftButtonDown(object? sender, MouseButtonEventArgs e)
@@ -186,10 +219,14 @@ public sealed class SelectionController : IDisposable
         e.Handled = true; // swallow the click so the target app never sees it
 
         string title = NativeMethods.GetWindowTitle(root);
-        ExitSelectionMode();
 
-        if (_getShareWindow().SetSource(root, title))
-            _overlay.Flash(root, title); // confirmation only; fades out by itself
+        // The cursor may have moved since the last tick — make sure the frame is
+        // on the window actually being clicked before it fades.
+        if (root != _hoveredHwnd)
+            _overlay.ShowOn(root, title);
+
+        bool ok = _getShareWindow().SetSource(root, title);
+        ExitSelectionMode(fadeOverlay: ok);
     }
 
     #endregion
@@ -198,6 +235,7 @@ public sealed class SelectionController : IDisposable
     {
         _activationTimer.Dispose();
         _safetyTimer.Dispose();
+        _trackTimer.Dispose();
         _mouseHook.Dispose();
         _keyboardHook.Dispose();
         _overlay.HideNow();
