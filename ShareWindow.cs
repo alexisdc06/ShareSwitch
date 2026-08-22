@@ -34,8 +34,8 @@ public class ShareWindow : Form
     private const int FallbackBorderPx = 3;
 
     private readonly DwmThumbnail _thumbnail = new();
-    private readonly Label _hintLabel;
     private readonly System.Windows.Forms.Timer _sourceWatchdog;
+    private string? _noticeMessage;
 
     private IntPtr _sourceHwnd = IntPtr.Zero;
     private string _sourceTitle = string.Empty;
@@ -60,15 +60,13 @@ public class ShareWindow : Form
         Location = new Point(80, 80);
         BackColor = Color.Black; // letterbox bars when auto-fit is off or clamped
 
-        _hintLabel = new Label
-        {
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter,
-            ForeColor = Color.Gainsboro,
-            Font = new Font("Segoe UI", 12f),
-            Text = BuildHintText()
-        };
-        Controls.Add(_hintLabel);
+        // Painted directly rather than using child controls: the backdrop needs
+        // to sit behind the text, and WinForms child controls don't composite
+        // over a custom-painted background cleanly.
+        SetStyle(ControlStyles.AllPaintingInWmPaint
+               | ControlStyles.UserPaint
+               | ControlStyles.OptimizedDoubleBuffer, true);
+
         AppSettings.Current.Changed += OnSettingsChanged;
 
         // Source windows can be resized or closed at any time and DWM never
@@ -77,7 +75,11 @@ public class ShareWindow : Form
         _sourceWatchdog.Tick += (_, _) => PollSource();
         _sourceWatchdog.Start();
 
-        Resize += (_, _) => UpdateThumbnailLayout();
+        Resize += (_, _) =>
+        {
+            UpdateThumbnailLayout();
+            Invalidate(); // re-centre the title card / redraw the backdrop
+        };
         ResizeBegin += (_, _) => _userResizing = true;   // don't fight a manual drag
         ResizeEnd += (_, _) => _userResizing = false;
     }
@@ -103,12 +105,13 @@ public class ShareWindow : Form
         _sourceHwnd = hwnd;
         _sourceTitle = title;
         _lastSourceSize = Size.Empty; // force an auto-fit on the next poll
-        _hintLabel.Visible = false;
+        _noticeMessage = null;
         Text = $"● ShareSwitch — mirroring: {title}";
 
         ApplyAccent();
         ApplyAutoFit(_thumbnail.GetSourceSize());
         UpdateThumbnailLayout();
+        Invalidate(); // clear the empty-state title card
         SourceChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -119,8 +122,7 @@ public class ShareWindow : Form
         _sourceHwnd = IntPtr.Zero;
         _sourceTitle = string.Empty;
         _lastSourceSize = Size.Empty;
-        _hintLabel.Text = reason is null ? BuildHintText() : reason + "\n\n" + BuildHintText();
-        _hintLabel.Visible = true;
+        _noticeMessage = reason;
         Text = "ShareSwitch — no source selected";
 
         ApplyAccent();
@@ -182,15 +184,83 @@ public class ShareWindow : Form
         }
     }
 
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+        // The backdrop shows through wherever the DWM thumbnail isn't drawn:
+        // the whole window before a source is picked, and the letterbox bars
+        // when auto-fit is off.
+        BackgroundRenderer.Paint(e.Graphics, ClientRectangle);
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
-        if (!_useFallbackBorder) return;
 
-        using var pen = new Pen(AccentColor, FallbackBorderPx);
-        int half = FallbackBorderPx / 2;
-        e.Graphics.DrawRectangle(pen, half, half,
-            ClientSize.Width - FallbackBorderPx, ClientSize.Height - FallbackBorderPx);
+        if (_sourceHwnd == IntPtr.Zero)
+            PaintEmptyState(e.Graphics);
+
+        if (_useFallbackBorder)
+        {
+            using var pen = new Pen(AccentColor, FallbackBorderPx);
+            int half = FallbackBorderPx / 2;
+            e.Graphics.DrawRectangle(pen, half, half,
+                ClientSize.Width - FallbackBorderPx, ClientSize.Height - FallbackBorderPx);
+        }
+    }
+
+    /// <summary>
+    /// The "nothing selected yet" screen. This is what a call sees if the user
+    /// shares before picking a source, so it reads as a deliberate title card
+    /// rather than an error.
+    /// </summary>
+    private void PaintEmptyState(Graphics g)
+    {
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+        Rectangle client = ClientRectangle;
+        string combo = AppSettings.DescribeModifiers(AppSettings.Current.SelectionModifiers);
+
+        // Scrim keeps the text readable over any custom artwork.
+        using (var scrim = new SolidBrush(Color.FromArgb(120, 0, 0, 0)))
+            g.FillRectangle(scrim, client);
+
+        using var titleFont = new Font("Segoe UI", 26f, FontStyle.Bold);
+        using var bodyFont = new Font("Segoe UI", 12f);
+        using var mutedFont = new Font("Segoe UI", 10.5f);
+        using var titleBrush = new SolidBrush(Color.White);
+        using var bodyBrush = new SolidBrush(Color.FromArgb(225, 232, 240));
+        using var mutedBrush = new SolidBrush(Color.FromArgb(150, 162, 178));
+        using var accentBrush = new SolidBrush(AccentColor);
+
+        var center = new StringFormat
+        {
+            Alignment = StringAlignment.Center,
+            LineAlignment = StringAlignment.Center
+        };
+
+        float y = client.Height / 2f - 86;
+
+        g.DrawString("ShareSwitch", titleFont, titleBrush,
+            new RectangleF(0, y, client.Width, 44), center);
+        y += 52;
+
+        g.DrawString("Share this window in Teams, Zoom or Meet.", bodyFont, bodyBrush,
+            new RectangleF(0, y, client.Width, 26), center);
+        y += 30;
+
+        g.DrawString($"Then hold {combo} and click any window to mirror it here.",
+            bodyFont, accentBrush, new RectangleF(0, y, client.Width, 26), center);
+        y += 42;
+
+        g.DrawString("Settings and shortcuts live in the tray icon, near the clock.",
+            mutedFont, mutedBrush, new RectangleF(0, y, client.Width, 24), center);
+
+        if (_noticeMessage is { Length: > 0 })
+        {
+            y += 34;
+            g.DrawString(_noticeMessage, mutedFont, mutedBrush,
+                new RectangleF(0, y, client.Width, 24), center);
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -324,16 +394,9 @@ public class ShareWindow : Form
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
-        if (_hintLabel.Visible)
-            _hintLabel.Text = BuildHintText();
-        else if (_sourceHwnd != IntPtr.Zero)
+        BackgroundRenderer.Invalidate(); // the backdrop may have been swapped
+        if (_sourceHwnd != IntPtr.Zero)
             ApplyAutoFit(_thumbnail.GetSourceSize());
-    }
-
-    private static string BuildHintText()
-    {
-        string combo = AppSettings.DescribeModifiers(AppSettings.Current.SelectionModifiers);
-        return $"No source selected.\n\nHold {combo} and click any window to mirror it here,\n" +
-               "or pick one from the tray menu.\n\nShare this window in Teams / Zoom / Meet.";
+        Invalidate();
     }
 }

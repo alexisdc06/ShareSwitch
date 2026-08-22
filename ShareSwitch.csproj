@@ -35,4 +35,10 @@
     <Description>Switch the window you share in video calls without stopping the share.</Description>
   </PropertyGroup>
 
+  <!-- Default backdrop, embedded so the single-file exe stays self-contained.
+       Replace assets\background.png and rebuild to change the shipped design. -->
+  <ItemGroup>
+    <EmbeddedResource Include="assets\background.png" />
+  </ItemGroup>
+
 </Project>

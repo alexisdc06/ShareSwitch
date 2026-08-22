@@ -38,6 +38,15 @@ public sealed class AppSettings
     /// </summary>
     public bool AutoFitToSource { get; set; } = true;
 
+    /// <summary>
+    /// Custom backdrop shown behind the mirror (and before a source is picked).
+    /// Null or empty uses the built-in ShareSwitch artwork.
+    ///
+    /// No file picker is exposed in the UI yet — this is the natural hook for a
+    /// branded/company tier. Editing the JSON by hand works in the meantime.
+    /// </summary>
+    public string? BackgroundImagePath { get; set; }
+
     /// <summary>Enables recalling assigned windows with modifier + 1…9.</summary>
     public bool EnableSlotShortcuts { get; set; } = true;
 
