@@ -53,6 +53,22 @@ public sealed class AppSettings
     /// <summary>Enables stepping through open windows with modifier + ← / →.</summary>
     public bool EnableCycleShortcuts { get; set; } = true;
 
+    /// <summary>
+    /// Start with only the tray icon, leaving the share window closed until
+    /// it's needed. Applies to every launch, not just automatic startup.
+    /// </summary>
+    public bool StartMinimizedToTray { get; set; }
+
+    /// <summary>
+    /// Last position of the share window, restored on next launch.
+    /// Size is only remembered when auto-fit is off — otherwise it's dictated
+    /// by whatever is being mirrored.
+    /// </summary>
+    public int? WindowX { get; set; }
+    public int? WindowY { get; set; }
+    public int? WindowWidth { get; set; }
+    public int? WindowHeight { get; set; }
+
     /// <summary>Launch ShareSwitch when Windows starts (HKCU Run key).</summary>
     [JsonIgnore]
     public bool LaunchAtStartup

@@ -53,7 +53,19 @@ public class TrayApplicationContext : ApplicationContext
                 ToolTipIcon.Warning);
         }
 
-        ShowShareWindow();
+        if (AppSettings.Current.StartMinimizedToTray)
+        {
+            // Create it (so a hotkey switch works immediately) but leave it hidden,
+            // and say so — an app that starts invisibly is otherwise unfindable.
+            GetOrCreateShareWindow();
+            _trayIcon.ShowBalloonTip(4000, "ShareSwitch",
+                "Running in the tray. Double-click the icon to open the share window.",
+                ToolTipIcon.Info);
+        }
+        else
+        {
+            ShowShareWindow();
+        }
     }
 
     private ShareWindow GetOrCreateShareWindow()

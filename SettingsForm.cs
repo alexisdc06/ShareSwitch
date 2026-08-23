@@ -25,6 +25,7 @@ public sealed class SettingsForm : Form
     private readonly WindowSlots _slots;
     private readonly ComboBox _hotkeyCombo = new();
     private readonly CheckBox _startupCheck = new();
+    private readonly CheckBox _minimizedCheck = new();
     private readonly CheckBox _autoFitCheck = new();
     private readonly CheckBox _slotsCheck = new();
     private readonly CheckBox _cycleCheck = new();
@@ -75,6 +76,15 @@ public sealed class SettingsForm : Form
             _startupCheck.Checked = AppSettings.Current.LaunchAtStartup;
         };
         general.Controls.Add(_startupCheck);
+
+        _minimizedCheck.Text = "Start minimized to the tray (don't open the share window)";
+        _minimizedCheck.AutoSize = true;
+        _minimizedCheck.CheckedChanged += (_, _) =>
+        {
+            AppSettings.Current.StartMinimizedToTray = _minimizedCheck.Checked;
+            AppSettings.Current.NotifyChanged();
+        };
+        general.Controls.Add(_minimizedCheck);
 
         _autoFitCheck.Text = "Resize the share window to match the mirrored window";
         _autoFitCheck.AutoSize = true;
@@ -215,6 +225,7 @@ public sealed class SettingsForm : Form
     private void LoadValues()
     {
         _startupCheck.Checked = AppSettings.Current.LaunchAtStartup;
+        _minimizedCheck.Checked = AppSettings.Current.StartMinimizedToTray;
         _autoFitCheck.Checked = AppSettings.Current.AutoFitToSource;
         _slotsCheck.Checked = AppSettings.Current.EnableSlotShortcuts;
         _cycleCheck.Checked = AppSettings.Current.EnableCycleShortcuts;

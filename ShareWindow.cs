@@ -54,11 +54,11 @@ public class ShareWindow : Form
     {
         Text = "ShareSwitch — no source selected";
         Icon = AppIcon.Get();
-        Size = new Size(1280, 720);
         MinimumSize = new Size(240, 160); // low, so small sources can be matched exactly
         StartPosition = FormStartPosition.Manual;
-        Location = new Point(80, 80);
-        BackColor = Color.Black; // letterbox bars when auto-fit is off or clamped
+        BackColor = Color.Black; // behind the backdrop, before first paint
+
+        RestoreBounds();
 
         // Painted directly rather than using child controls: the backdrop needs
         // to sit behind the text, and WinForms child controls don't composite
@@ -81,7 +81,11 @@ public class ShareWindow : Form
             Invalidate(); // re-centre the title card / redraw the backdrop
         };
         ResizeBegin += (_, _) => _userResizing = true;   // don't fight a manual drag
-        ResizeEnd += (_, _) => _userResizing = false;
+        ResizeEnd += (_, _) =>
+        {
+            _userResizing = false;
+            PersistBounds(); // fires after both move and resize drags
+        };
     }
 
     public IntPtr SourceHwnd => _sourceHwnd;
@@ -129,6 +133,71 @@ public class ShareWindow : Form
         Invalidate();
         SourceChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    #region Window position
+
+    /// <summary>
+    /// Small by default: the idle window is just a placeholder, and auto-fit
+    /// resizes it the moment a source is picked, so a large default would only
+    /// get in the user's way.
+    /// </summary>
+    private static readonly Size DefaultSize = new(480, 270);
+
+    private void RestoreBounds()
+    {
+        var settings = AppSettings.Current;
+
+        // Size is only meaningful to restore when the user controls it.
+        Size size = !settings.AutoFitToSource
+                    && settings.WindowWidth is { } w && settings.WindowHeight is { } h
+            ? new Size(Math.Max(MinimumSize.Width, w), Math.Max(MinimumSize.Height, h))
+            : DefaultSize;
+
+        Point location = settings.WindowX is { } x && settings.WindowY is { } y
+            ? new Point(x, y)
+            : new Point(120, 120);
+
+        Size = size;
+        Location = EnsureOnScreen(new Rectangle(location, size));
+    }
+
+    /// <summary>
+    /// Keeps the window reachable: a saved position can point at a monitor that
+    /// has since been unplugged, or off the edge of a smaller screen.
+    /// </summary>
+    private static Point EnsureOnScreen(Rectangle bounds)
+    {
+        // Visible if it overlaps any screen's working area meaningfully.
+        foreach (Screen screen in Screen.AllScreens)
+        {
+            Rectangle overlap = Rectangle.Intersect(screen.WorkingArea, bounds);
+            if (overlap.Width >= 80 && overlap.Height >= 40)
+                return bounds.Location;
+        }
+
+        Rectangle work = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1024, 768);
+        return new Point(
+            work.Left + Math.Max(0, (work.Width - bounds.Width) / 2),
+            work.Top + Math.Max(0, (work.Height - bounds.Height) / 2));
+    }
+
+    private void PersistBounds()
+    {
+        if (WindowState != FormWindowState.Normal) return;
+
+        var settings = AppSettings.Current;
+        settings.WindowX = Left;
+        settings.WindowY = Top;
+
+        // With auto-fit on, the size belongs to the mirrored window, not the user.
+        if (!settings.AutoFitToSource)
+        {
+            settings.WindowWidth = Width;
+            settings.WindowHeight = Height;
+        }
+    }
+
+    #endregion
 
     /// <summary>Human-readable status for the tray menu / tooltip.</summary>
     public string StatusText => _sourceHwnd == IntPtr.Zero
@@ -285,6 +354,8 @@ public class ShareWindow : Form
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        PersistBounds();
+
         if (!AllowClose && e.CloseReason == CloseReason.UserClosing)
         {
             e.Cancel = true;

@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.5.0 — 2026-08-22
+
+**Added**
+
+- **Start minimized to the tray** (Settings → General). Pairs with *Start with
+  Windows* so ShareSwitch can sit quietly in the tray until you need it, instead
+  of throwing a window onto your desktop at every login. A one-off balloon tip
+  points at the tray icon so the app is never invisible.
+- The share window now **remembers where you put it**. Size is remembered too
+  when auto-fit is off; with auto-fit on, size belongs to whatever is being
+  mirrored. A saved position on a monitor you've since unplugged is recovered
+  back onto the primary screen.
+- **Branded backdrop** behind the mirror, visible before a source is picked and
+  behind the letterbox bars. Replace `assets/background.png` and rebuild to
+  change it, or point `BackgroundImagePath` at your own file.
+- The idle window is now a proper title card — what your viewers see if you
+  share before picking a source — telling you to share this window, the hotkey
+  to use, and where the settings live.
+
+**Changed**
+
+- Default window size is now 480×270 instead of 1280×720. Auto-fit resizes it
+  the moment you pick a source, so a large default only got in the way.
+
 ## v0.4.0 — 2026-08-21
 
 **Added**
