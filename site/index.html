@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShareSwitch — Switch the window you're sharing, without stopping the share</title>
+<meta name="description" content="A free Windows app that lets you change which window you're screen-sharing mid-call. Hold a hotkey, click any window, done. No stopping, no re-sharing.">
+
+<meta property="og:title" content="ShareSwitch — Switch what you're sharing, mid-call">
+<meta property="og:description" content="Free Windows app. Share one window in Teams, Zoom or Meet, then hotkey-swap what it shows. No interruption.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<style>
+  :root{
+    --bg:#0e1116; --surface:#161a21; --line:#232935;
+    --text:#eef2f7; --muted:#98a3b3; --accent:#00aaff; --accent-soft:rgba(0,170,255,.12);
+    --radius:14px; --max:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 24px}
+  a{color:inherit}
+
+  /* Nav */
+  nav{position:sticky; top:0; z-index:10; backdrop-filter:blur(12px);
+      background:rgba(14,17,22,.78); border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex; align-items:center; gap:16px; height:64px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:650; letter-spacing:-.01em; text-decoration:none}
+  .nav-links{margin-left:auto; display:flex; align-items:center; gap:22px; font-size:14.5px}
+  .nav-links a{color:var(--muted); text-decoration:none}
+  .nav-links a:hover{color:var(--text)}
+
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:10px;
+       font-weight:600; font-size:15px; text-decoration:none; border:1px solid transparent; white-space:nowrap}
+  .btn-primary{background:var(--accent); color:#04121c}
+  .btn-primary:hover{background:#33bbff}
+  .btn-ghost{border-color:var(--line); color:var(--text)}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent)}
+  .btn-sm{padding:8px 16px; font-size:14px}
+
+  /* Hero */
+  header{padding:96px 0 72px; text-align:center; position:relative; overflow:hidden}
+  header::before{content:""; position:absolute; inset:-40% 0 auto 0; height:620px;
+    background:radial-gradient(ellipse at 50% 0,var(--accent-soft),transparent 62%); pointer-events:none}
+  h1{position:relative; font-size:clamp(34px,5.4vw,60px); line-height:1.08;
+     letter-spacing:-.03em; margin:0 0 20px; font-weight:700}
+  h1 em{font-style:normal; color:var(--accent)}
+  .sub{position:relative; font-size:clamp(17px,2.1vw,20px); color:var(--muted);
+       max-width:640px; margin:0 auto 34px}
+  .cta{position:relative; display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+  .meta{position:relative; margin-top:18px; font-size:13.5px; color:var(--muted)}
+
+  /* Demo slot */
+  .demo{margin:64px auto 0; max-width:900px; border:1px solid var(--line); border-radius:var(--radius);
+        background:var(--surface); aspect-ratio:16/10; display:grid; place-items:center;
+        color:var(--muted); font-size:14.5px; text-align:center; padding:24px;
+        box-shadow:0 24px 70px -30px rgba(0,0,0,.9)}
+
+  /* Sections */
+  section{padding:88px 0; border-top:1px solid var(--line)}
+  h2{font-size:clamp(25px,3.4vw,36px); letter-spacing:-.02em; margin:0 0 14px; font-weight:680}
+  .lede{color:var(--muted); max-width:620px; margin:0 0 44px; font-size:17px}
+
+  .steps{display:grid; gap:22px; grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .step{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:26px}
+  .num{width:30px; height:30px; border-radius:8px; background:var(--accent-soft); color:var(--accent);
+       display:grid; place-items:center; font-weight:700; font-size:14px; margin-bottom:14px}
+  .step h3{margin:0 0 8px; font-size:17.5px; font-weight:640}
+  .step p{margin:0; color:var(--muted); font-size:15px}
+
+  table{width:100%; border-collapse:collapse; font-size:15px}
+  td{padding:15px 0; border-bottom:1px solid var(--line); color:var(--muted); vertical-align:top}
+  td:first-child{width:230px; color:var(--text)}
+  kbd{display:inline-block; background:var(--surface); border:1px solid var(--line);
+      border-bottom-width:2px; border-radius:6px; padding:2px 7px; font:600 13px/1.5 ui-monospace,monospace}
+
+  .trust{display:grid; gap:22px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:8px}
+  .trust div{border-left:2px solid var(--accent); padding:2px 0 2px 18px}
+  .trust h3{margin:0 0 6px; font-size:16px; font-weight:640}
+  .trust p{margin:0; color:var(--muted); font-size:14.5px}
+
+  details{border-bottom:1px solid var(--line); padding:18px 0}
+  summary{cursor:pointer; font-weight:600; font-size:16px; list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+"; float:right; color:var(--muted); font-weight:400}
+  details[open] summary::after{content:"−"}
+  details p{color:var(--muted); margin:12px 0 0; font-size:15px; max-width:660px}
+
+  .final{text-align:center; padding:96px 0}
+  footer{border-top:1px solid var(--line); padding:34px 0; color:var(--muted); font-size:14px}
+  footer .wrap{display:flex; gap:16px; flex-wrap:wrap; justify-content:space-between}
+  footer a{color:var(--muted)}
+  footer a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="2.5" y="3.5" width="13" height="10" rx="2" stroke="#eef2f7" stroke-width="1.6"/>
+      <rect x="8.5" y="10.5" width="13" height="10" rx="2" fill="#00aaff"/>
+    </svg>
+    ShareSwitch
+  </a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#shortcuts">Shortcuts</a>
+    <a href="#privacy">Privacy</a>
+    <a href="https://github.com/alexisdc06/ShareSwitch">GitHub</a>
+    <a class="btn btn-primary btn-sm" href="https://github.com/alexisdc06/ShareSwitch/releases/latest">Download</a>
+  </div>
+</div></nav>
+
+<header id="top"><div class="wrap">
+  <h1>Change the window you're sharing.<br><em>Without stopping the share.</em></h1>
+  <p class="sub">Share one window in Teams, Zoom or Meet. Then hold a hotkey, click any other window,
+     and that's what everyone sees — instantly. No "let me re-share", no dead air.</p>
+  <div class="cta">
+    <a class="btn btn-primary" href="https://github.com/alexisdc06/ShareSwitch/releases/latest">Download for Windows</a>
+    <a class="btn btn-ghost" href="https://github.com/alexisdc06/ShareSwitch">View source</a>
+  </div>
+  <p class="meta">Free and open source · Windows 10 &amp; 11 · ~5 MB · No account, no telemetry</p>
+
+  <!-- DESIGNER: replace with the demo GIF -->
+  <div class="demo">Demo GIF goes here — hold Ctrl+Alt, click a window, viewers' content switches instantly.</div>
+</div></header>
+
+<section id="how"><div class="wrap">
+  <h2>One window, any content</h2>
+  <p class="lede">ShareSwitch opens a proxy window that mirrors any other window, live.
+     You share that one window once — everything after happens inside it.</p>
+  <div class="steps">
+    <div class="step"><div class="num">1</div>
+      <h3>Share the ShareSwitch window</h3>
+      <p>In your call, pick "ShareSwitch" from the window list. Do this once, at the start.</p></div>
+    <div class="step"><div class="num">2</div>
+      <h3>Hold Ctrl + Alt</h3>
+      <p>A highlight frame follows your cursor, showing which window you're about to send.</p></div>
+    <div class="step"><div class="num">3</div>
+      <h3>Click. Done.</h3>
+      <p>Your viewers see the new window immediately. The call never noticed a transition.</p></div>
+  </div>
+</div></section>
+
+<section id="shortcuts"><div class="wrap">
+  <h2>Faster than finding the right thumbnail</h2>
+  <p class="lede">Assign the windows you switch between most, then jump straight to them from anywhere —
+     no need to focus ShareSwitch first.</p>
+  <table>
+    <tr><td><kbd>Ctrl</kbd> <kbd>Alt</kbd> + click</td><td>Mirror the window you click</td></tr>
+    <tr><td><kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Shift</kbd> <kbd>1–9</kbd></td><td>Assign the window under your cursor to a number</td></tr>
+    <tr><td><kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>1–9</kbd></td><td>Jump straight to that window</td></tr>
+    <tr><td><kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>←</kbd> <kbd>→</kbd></td><td>Step through your open windows</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Cancel without switching</td></tr>
+  </table>
+</div></section>
+
+<section id="privacy"><div class="wrap">
+  <h2>Built to be trusted</h2>
+  <p class="lede">It's a screen-sharing tool with a global hotkey. You should be sceptical of that —
+     so here's exactly what it does.</p>
+  <div class="trust">
+    <div><h3>No network code at all</h3>
+      <p>No telemetry, no analytics, no update checks. Search the source for <code>HttpClient</code> — there are no matches.</p></div>
+    <div><h3>The keyboard hook is minimal</h3>
+      <p>Every key that isn't a modifier, Escape, a digit or an arrow is discarded inside the hook itself, before any other code sees it. Digits and arrows only pass while a modifier is held.</p></div>
+    <div><h3>Open source, MIT</h3>
+      <p>Every line is readable on GitHub, and you can build it yourself with one command.</p></div>
+    <div><h3>No admin rights</h3>
+      <p>Installs per-user. Or run the portable .exe with no install at all.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Questions</h2>
+  <details><summary>Windows says "Windows protected your PC" — is that a problem?</summary>
+    <p>That's SmartScreen reacting to an unsigned app, not a detection of anything harmful.
+       Code-signing certificates cost a few hundred euros a year, which is hard to justify for a free tool.
+       Click <em>More info → Run anyway</em>, or build from source if you'd rather verify it yourself.</p></details>
+  <details><summary>Is there a Mac version?</summary>
+    <p>Not currently. macOS has no equivalent of the Windows compositor feature this is built on,
+       so it would be a full rewrite rather than a port. If you'd use it, add your voice to the
+       <a href="https://github.com/alexisdc06/ShareSwitch/issues">issue tracker</a>.</p></details>
+  <details><summary>Do my viewers see the mouse cursor?</summary>
+    <p>No — the Windows API used for mirroring doesn't include the cursor. Fine for showing documents,
+       designs and dashboards; less ideal for demonstrating precise clicks.</p></details>
+  <details><summary>Does it slow my machine down?</summary>
+    <p>No. The mirroring is done by the Windows compositor itself, which is already drawing those windows.
+       There's no video encoding, no capture loop, and it idles at essentially zero CPU.</p></details>
+  <details><summary>Will it work with my conferencing app?</summary>
+    <p>It works with anything that can share a single window — Teams, Zoom, Google Meet, Slack huddles,
+       Discord, OBS. ShareSwitch is just a normal window as far as they're concerned.</p></details>
+</div></section>
+
+<div class="final"><div class="wrap">
+  <h2>Stop saying "can you see my screen now?"</h2>
+  <p class="lede" style="margin:14px auto 32px">Free, open source, and about the size of a photo.</p>
+  <a class="btn btn-primary" href="https://github.com/alexisdc06/ShareSwitch/releases/latest">Download for Windows</a>
+</div></div>
+
+<footer><div class="wrap">
+  <span>MIT licensed · Made by <a href="https://ac-design.studio">AC Design Studio</a></span>
+  <span><a href="https://github.com/alexisdc06/ShareSwitch">GitHub</a> ·
+        <a href="https://github.com/alexisdc06/ShareSwitch/issues">Report a bug</a></span>
+</div></footer>
+
+</body>
+</html>
