@@ -1,89 +1,122 @@
-# ShareSwitch — Launch Plan (GitHub + Product Hunt)
+# ShareSwitch — Product Hunt launch plan
 
-Your PM checklist. Steps marked 🎨 are the design work only you can do;
-everything else is either done or a 5-minute mechanical step.
+Status key: ✅ ready · 🔲 to do · 👤 needs you (can't be done for you)
 
----
-
-## Phase A — Ship v0.2.0 (this week)
-
-1. **Test the app** on your machine using `TESTING.md`. Send me any build errors or ❌ items — I fix, you re-test.
-2. **Create the GitHub repo** (claude.ai/github or github.com → New → `ShareSwitch`, public, no README/license — we have them). Then from `C:\Projects\ShareSwitch\ShareScreen`:
-   ```
-   git remote add origin https://github.com/YOUR_USER/ShareSwitch.git
-   git push -u origin main
-   ```
-3. **Tell me your GitHub username** — I'll replace the `alexisdc06` placeholders in README.md and installer/ShareSwitch.iss (or search-replace yourself).
-4. **First release**: after CI is green,
-   ```
-   git tag v0.2.0
-   git push origin v0.2.0
-   ```
-   → GitHub Actions builds the installer + portable exe and publishes the Release automatically. Download and test-install it once.
-
-## Phase B — Design pass 🎨 (your focus)
-
-The only assets standing between you and launch:
-
-| Asset | Spec | Used in |
-|---|---|---|
-| 🎨 App icon | Replace `assets/icon.ico` (multi-size: 16–256 px) and `assets/icon.png` (256 px). Current one is my placeholder. | exe, installer, tray, taskbar |
-| 🎨 Demo GIF | ~10 s, ≤1270×760, <10 MB. Storyboard below. | README hero + PH gallery |
-| 🎨 PH thumbnail | 240×240 (animated GIF allowed — animated thumbnails get more clicks) | Product Hunt card |
-| 🎨 PH gallery | 3–5 images, 1270×760. Suggested: ① hero with tagline ② "the problem" (stop-share dialog chaos) ③ hotkey+click flow ④ before/after comparison ⑤ "free & open source, MIT" | Product Hunt |
-| 🎨 Social banner | 1280×640 (GitHub repo → Settings → Social preview; doubles as X/LinkedIn card) | GitHub + socials |
-
-**Demo GIF storyboard** (this GIF sells the whole product):
-1. A Meet/Teams call visible, sharing "ShareSwitch" window — viewer side shows a Figma file
-2. Presenter holds Ctrl+Alt → blue frame glides across windows
-3. Click a browser window → viewer side switches instantly
-4. Caption: "Never stop sharing again."
-Tip: record with ScreenToGif (free) at 1270×760; show the viewer's screen picture-in-picture so the "no interruption" claim is visible.
-
-To rebuild with your icon: just replace the two files in `assets/`, commit, and tag a new version — CI does the rest.
-
-## Phase C — Pre-launch polish (optional but high-ROI, tell me and I'll do it)
-
-- Landing page on GitHub Pages (single HTML, your branding) — PH listings with a real site convert better than bare repo links
-- Settings persistence + in-app autostart toggle (Phase 3 code)
-- `winget` package submission (post-launch: gives you `winget install ShareSwitch` — great follow-up comment on PH)
-- Code signing decision: an OV certificate (~€60–200/yr, e.g. Certum for open source) removes the SmartScreen warning. Not blocking, but the #1 complaint risk on PH. Alternative for later: sign via Azure Trusted Signing.
-
-## Phase D — Product Hunt launch day
-
-**Prep (done for you — copy below):** create the PH draft, schedule for **12:01 AM PT, Tuesday–Thursday**, add topics: `Windows`, `Productivity`, `Remote Work`, `Open Source`, `Meetings`.
-
-**Tagline options (≤60 chars):**
-- "Switch what you screen-share without stopping the share" ← recommended
-- "Change your shared window mid-call. No one notices."
-- "Hotkey-swap the window you're sharing in any video call"
-
-**Description (≤260 chars):**
-> ShareSwitch is a tiny free Windows app that mirrors any window into one shareable proxy window. Share it once in Teams/Zoom/Meet, then hold a hotkey and click any window to switch what viewers see — instantly, without ever stopping the share. Open source (MIT).
-
-**First comment draft (post immediately after launch):**
-> Hey Product Hunt! 👋
->
-> I built ShareSwitch out of pure frustration: every design review I'd share a window, then need to show *another* window — stop share, find the right thumbnail, re-share, "can you see it now?"… momentum gone.
->
-> ShareSwitch fixes it with one dumb-simple idea: you share a proxy window once, and a live mirror of any window appears inside it. Hold Ctrl+Alt, click any window, and that's what your viewers see. Instantly.
->
-> It's free, open source (MIT), needs no admin rights or install (portable exe available), built on the Windows compositor so there's zero performance cost.
->
-> Things it doesn't do yet: show the mouse cursor (Windows API limitation I'm working around next), and macOS (sorry — Windows only for now).
->
-> I'd love feedback — especially from people who present a lot. What would make this a daily driver for you?
-
-**Launch-day rhythm:** reply to every comment within ~30 min for the first 12 h; post the link in relevant communities you're genuinely part of (no vote-begging — PH penalizes it); share on X/LinkedIn with the demo GIF around 8–9 AM in your audience's timezone.
-
-**Success metrics for v1 launch:** GitHub stars + issues opened (real usage signal) > PH rank. A top-10 day for a niche Windows utility is a win.
+All paste-ready text (listing fields, maker comment, social posts) is in
+[`LAUNCH-COPY.md`](LAUNCH-COPY.md).
 
 ---
 
-## Timeline suggestion
+## 1. Pick the date
 
-| When | What |
+| Option | Date (suggested) | Launch time in Singapore | Trade-off |
+|---|---|---|---|
+| **Weekend** | Sat 24 Oct 2026 | **3:01 PM SGT** | Less competition → a Top-3 badge is far more reachable. Your Twitch/YouTube viewers are around; LinkedIn is quiet. |
+| **Weekday** | Tue 27 or Wed 28 Oct | **3:01 PM SGT** | Most traffic and newsletter exposure, but the hardest days to rank. LinkedIn and accelerator contacts are active. |
+
+Product Hunt days reset at **12:01 AM Pacific**. Until 1 Nov that's PDT (= 3:01 PM
+SGT); from 2 Nov it's PST (= **4:01 PM SGT**). Avoid Sun 1 Nov itself (clocks change).
+
+**Recommendation:** with zero Product Hunt network and the goal of a badge for the
+studio site, **Saturday 24 Oct**. It leaves one week to finish the materials and one
+week to warm up your account. Bonus: 3 PM on a Saturday is a natural time to **launch
+live on stream**.
+
+---
+
+## 2. App & release
+
+- ✅ v0.6.1 code: rebrand, number shortcuts fix, installer header
+- 👤 Test v0.6.1: number shortcuts (top row + numpad), installer pages, Settings
+- 👤 Push, then tag `v0.6.1` → GitHub builds the installer + portable exe
+- 👤 Install the released build on a second PC or a fresh Windows user account
+  (catches the SmartScreen experience exactly as visitors will see it)
+- 👤 Scan the released `.exe` on [virustotal.com](https://www.virustotal.com) and keep the
+  link — the first "is this safe?" comment gets it as the reply
+- 🔲 Decide on the GitHub name: keep `alexisdc06` or move the repo to an organisation
+  (e.g. `acdesignstudio`) — old links redirect automatically. Tell me the name and
+  I'll update every link. **Do this before the Framer page and listing are built.**
+- 👤 GitHub repo → Settings: upload `assets/social-preview.png` (the new brand
+  version) as the social preview; enable Issues; enable private vulnerability reporting
+- 🔲 README: put the demo GIF at the top (I can do this)
+
+## 3. Product Hunt listing assets
+
+| Asset | Spec | File | Status |
+|---|---|---|---|
+| Thumbnail (looping GIF) | 240×240 | `launch/final/producthunt/thumbnail-240.gif` | ✅ |
+| Thumbnail (static fallback) | 240×240 | `launch/final/producthunt/thumbnail-240.png` | ✅ |
+| Gallery images | 1270×760 ×5 | `launch/final/producthunt/01–05*.png` | ✅ |
+| Demo video | 16:9, 33 s, music + SFX | `launch/final/shareswitch-launch.mp4` | ✅ |
+| Video **as a YouTube link** | Product Hunt's gallery takes a video URL, not a file | — | 👤 upload to your YouTube (public or unlisted) |
+| Tagline, description, topics | ≤60 / ≤260 chars | `LAUNCH-COPY.md` | ✅ |
+| Maker comment | pre-written | `LAUNCH-COPY.md` | ✅ |
+| Website link | `https://ac-design.studio/shareswitch?ref=producthunt` | — | 🔲 after the Framer page is live |
+
+- 👤 Create the listing and **schedule** it for 12:01 AM PT on the chosen day
+- 👤 Copy the badge embed code Product Hunt gives you (for the website)
+
+## 4. Website — `ac-design.studio/shareswitch`
+
+- ✅ Source page: `site/index.html` (brand version, built for Framer import)
+- ✅ Assets: `site/assets/` (backdrop, logo, demo loop, launch video, OG image)
+- 👤 Push → GitHub Pages publishes it at `https://alexisdc06.github.io/ShareSwitch/`
+- 👤 Build it in Framer (steps below)
+- 👤 Paste the Product Hunt badge embed into the two marked slots (hero + final CTA)
+- 👤 Point the launch-day bar's link at your Product Hunt page; remove it after launch week
+- 👤 Page settings: title, description, OG image (`site/assets/og-image.png`)
+- 👤 Link the page from the main ac-design.studio site (nav or work section)
+
+**Getting it into Framer.** Framer has no "import HTML file". Two routes:
+
+1. **Framer's AI agent:** give it the live GitHub Pages URL (or paste the HTML) and ask
+   it to rebuild the page in your site's styles. Fastest; you then refine.
+2. **Framer browser extension (official):** open the live page, copy one section at a
+   time, paste onto the canvas as editable layers. Most faithful to the design.
+
+Either way, afterwards: swap the two videos for Framer **Video** components (upload
+`demo-loop.mp4` and `launch-video.mp4`), put the badge in an **Embed** component,
+and check fonts (Figtree + Space Grotesk are both in Framer's Google Fonts list) and
+the mobile breakpoint.
+
+## 5. Warm-up week (the 7 days before)
+
+- 👤 Complete your Product Hunt profile: photo, the bio below, link to ac-design.studio
+- 👤 Leave 2–3 genuinely useful comments a day on relevant launches (design tools,
+  Windows utilities, remote-work products). Quality over volume.
+- 👤 Tell your network the **date** (no link yet) so anyone without a Product Hunt account
+  can create one and look around before launch day. Brand-new accounts that only
+  appear to vote look like spam to Product Hunt.
+- 👤 Line up a short list of people who'll genuinely try it and comment — comments
+  matter as much as votes.
+
+> **Bio:** Industrial and UI/UX product designer. Founder of AC Design Studio and
+> Threadworks. I bridge the gap between complex enterprise engineering and clean
+> digital interfaces, and develop factory-ready technical soft goods. Building and
+> prototyping in public on A Life of Design.
+
+## 6. Launch-day run sheet (times in SGT, for a PDT launch day)
+
+| Time | Action |
 |---|---|
-| Week 1 | Test → fix loop; push to GitHub; v0.2.0 release; start icon design |
-| Week 2 | 🎨 finalize icon + GIF + gallery; I do landing page + Phase 3 polish; re-release as v1.0.0 |
-| Week 3 | Schedule PH for Tue/Wed 12:01 AM PT; prep socials; launch 🚀 |
+| 2:30 PM | Coffee. Download link, website and listing preview all checked once more. |
+| **3:01 PM** | Listing goes live → post the **maker comment immediately**. |
+| 3:05 PM | Go live on Twitch/YouTube: "launching ShareSwitch on Product Hunt right now". |
+| 3:10 PM | LinkedIn post, X post, personal messages — ask for **support and feedback**, never "upvotes". |
+| 3:00–7:00 PM | Reply to **every** comment, fast and thoughtfully. This window weighs most. |
+| Evening | Post an update in the listing thread (e.g. a fix shipped, an answer to a common question). |
+| Next day | Thank-you post with the result; put the badge on the studio site. |
+
+## 7. Direct link or website?
+
+**Both, for different jobs:**
+
+- **Your network → straight to the Product Hunt page.** Voting and commenting happen
+  there; every extra click loses people. Product Hunt doesn't publish how it treats
+  referral sources. The documented risks are vote rings and new accounts that vote
+  and vanish, not *where* people clicked from.
+- **Product Hunt → your website.** The listing's website link should be
+  `ac-design.studio/shareswitch?ref=producthunt`. That's how Product Hunt traffic lands
+  on your studio domain (and shows up in your analytics), rather than on GitHub.
+- **Your website → Product Hunt** (launch week only): the announcement bar and badge
+  turn visitors arriving from search, socials or GitHub into Product Hunt visits.
