@@ -55,7 +55,8 @@ Requires Windows 10/11 (x64). No runtime to install — everything is self-conta
 
 > **SmartScreen note:** the binaries aren't code-signed yet, so Windows may show
 > "Windows protected your PC" → click *More info* → *Run anyway*. You can also
-> build from source (below).
+> build from source (below). The v0.6.4 installer scans clean on
+> [VirusTotal: 0 of 69 security vendors flagged it](https://www.virustotal.com/gui/file/c9b77bc4fe9806f60ff046443d6c5a9170028cb247c82c0a08b897b65351ece7).
 
 ShareSwitch is in early testing — [feedback and bug reports](https://github.com/alexisdc06/ShareSwitch/issues) are very welcome. See [CHANGELOG.md](CHANGELOG.md) for what's new.
 

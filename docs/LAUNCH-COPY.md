@@ -102,3 +102,17 @@ Rule for everything below: ask for **support and feedback**, never for upvotes.
 > who tried it, commented and sent feedback — [N] of you, and a lot of great ideas
 > I'm already working on. If you present on Windows, it's free:
 > ac-design.studio/shareswitch
+
+---
+
+## Ready reply: "Is this safe?"
+
+> Fair question for anything with a keyboard hook. The installer scans clean on
+> VirusTotal — 0 of 69 security vendors: https://www.virustotal.com/gui/file/c9b77bc4fe9806f60ff046443d6c5a9170028cb247c82c0a08b897b65351ece7
+> The full source is on GitHub, and SECURITY.md explains exactly which keys the hook
+> can see (modifiers, Esc, digits and arrows — only while Ctrl/Alt/Shift is held) and
+> that the app contains no network code at all. The "Windows protected your PC"
+> prompt is SmartScreen reacting to a new, unsigned app, not a detection.
+
+*Each release is a new file: re-scan the new installer and update this link (and the
+README + website) every time you publish a version.*
