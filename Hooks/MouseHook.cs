@@ -92,9 +92,10 @@ public sealed class MouseHook : IDisposable
                         return (IntPtr)1;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Never let an exception escape the hook chain.
+                // Never let an exception escape the hook chain — but leave a trace.
+                Diagnostics.LogError("mouse hook", ex);
             }
         }
         return CallNextHookEx(_hook, nCode, wParam, lParam);

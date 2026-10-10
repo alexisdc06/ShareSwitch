@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.6.1 — 2026-10-10
+
+**Fixed**
+
+- **Number shortcuts** (`Ctrl+Alt+Shift+1…9` to assign, `Ctrl+Alt+1…9` to
+  recall) now recognise digits by key position. They work on every keyboard
+  layout and on the numpad — where Windows used to turn Shift + a numpad digit
+  into End/Down/PgDn, so the assignment never arrived.
+- Holding **Ctrl+Alt+Shift** now shows the highlight frame too, labelled
+  *Press 1–9 to save*, so you can see which window you're about to assign.
+  Saving or recalling flashes *Saved to 3 · Window* / *3 · Window* as
+  confirmation.
+- Unexpected errors inside the input hooks are now written to
+  `%APPDATA%\ShareSwitch\errors.log` instead of vanishing silently (exception
+  details only — never keys or window content).
+
+**Changed**
+
+- **Installer**: the page header is a taller navy band with the title and
+  description centred vertically, a larger app icon, and more space above the
+  page content.
+
 ## v0.6.0 — 2026-10-10
 
 **The interface now wears the ShareSwitch brand.**

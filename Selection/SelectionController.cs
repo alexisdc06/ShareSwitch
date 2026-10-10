@@ -105,16 +105,18 @@ public sealed class SelectionController : IDisposable
         Keys held = GetHeldModifiers(e);
 
         // Slot / cycle shortcuts fire on key-down while the combo is held.
-        if (e.IsDown && (held & required) == required && HandleActionKey(e.Key, held, required))
+        if (e.IsDown && (held & required) == required && HandleActionKey(e, held, required))
         {
             e.Handled = true; // don't let the shortcut reach the focused app
             return;
         }
 
-        if (!_comboHeld && held == required)
+        // Exact match arms selection; the one exception is combo + Shift, which
+        // arms it too (for assigning numbers) so the user sees what they're
+        // pointing at. Other extra modifiers still don't arm anything.
+        bool arms = held == required || (CanAssign(required) && held == (required | Keys.Shift));
+        if (!_comboHeld && arms)
         {
-            // Exact match required: holding extra modifiers (e.g. Ctrl+Alt+Shift
-            // for an app shortcut) must not arm selection mode.
             _comboHeld = true;
             _activationTimer.Interval = Math.Max(1, AppSettings.Current.SelectionActivationDelayMs);
             _activationTimer.Start();
@@ -143,9 +145,13 @@ public sealed class SelectionController : IDisposable
     /// </list>
     /// </summary>
     /// <returns>true if the key was consumed.</returns>
-    private bool HandleActionKey(Keys key, Keys held, Keys required)
+    private static bool CanAssign(Keys required)
+        => AppSettings.Current.EnableSlotShortcuts && !required.HasFlag(Keys.Shift);
+
+    private bool HandleActionKey(KeyboardHookEventArgs e, Keys held, Keys required)
     {
-        int slot = WindowSlots.IndexFromKey(key);
+        Keys key = e.Key;
+        int slot = WindowSlots.IndexFromKey(key, e.ScanCode, e.Extended);
         if (slot >= 0)
         {
             if (!AppSettings.Current.EnableSlotShortcuts) return false;
@@ -177,14 +183,14 @@ public sealed class SelectionController : IDisposable
 
         string title = NativeMethods.GetWindowTitle(target);
         Slots.Assign(slot, target, title);
-        SwitchTo(target, title);
+        SwitchTo(target, title, $"Saved to {slot + 1}  ·  {title}");
         return true;
     }
 
     private bool RecallSlot(int slot)
     {
         if (!Slots.TryGet(slot, out IntPtr hwnd, out string title)) return false;
-        SwitchTo(hwnd, title);
+        SwitchTo(hwnd, title, $"{slot + 1}  ·  {title}");
         return true;
     }
 
@@ -228,7 +234,7 @@ public sealed class SelectionController : IDisposable
     }
 
     /// <summary>Switches the mirror and flashes the confirmation frame.</summary>
-    private void SwitchTo(IntPtr hwnd, string title)
+    private void SwitchTo(IntPtr hwnd, string title, string? label = null)
     {
         // The user is driving by keyboard now, so stop the cursor-following
         // highlight — otherwise the next tracking tick would immediately pull
@@ -237,7 +243,7 @@ public sealed class SelectionController : IDisposable
 
         if (_getShareWindow().SetSource(hwnd, title))
         {
-            _overlay.ShowOn(hwnd, title);
+            _overlay.ShowOn(hwnd, label ?? title);
             _overlay.FadeOut();
         }
     }
@@ -336,7 +342,10 @@ public sealed class SelectionController : IDisposable
         }
 
         _hoveredHwnd = root;
-        _overlay.ShowOn(root, NativeMethods.GetWindowTitle(root));
+        string title = NativeMethods.GetWindowTitle(root);
+        // Shift held on top of the combo: say what pressing a number will do.
+        bool assignHint = CanAssign(RequiredModifiers) && ReadPhysicalModifiers().HasFlag(Keys.Shift);
+        _overlay.ShowOn(root, assignHint ? $"Press 1–9 to save  ·  {title}" : title);
     }
 
     private void OnLeftButtonDown(object? sender, MouseButtonEventArgs e)

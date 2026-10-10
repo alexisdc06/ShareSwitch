@@ -21,12 +21,16 @@ How the risk is contained, in code you can audit:
   `PRIVACY BOUNDARY` comment). Only two categories survive:
   - **Ctrl, Alt, Shift and Escape** — always, since they drive selection mode.
   - **Digits 1–9 and the ← / → arrows** — *only while a modifier key is
-    physically held*, because they trigger the slot and cycle shortcuts. When
-    you are typing normally, with no modifier down, they are discarded like
-    everything else.
+    physically held*, because they trigger the slot and cycle shortcuts.
+    Digits are recognised by key position (top row or numpad), so this works
+    on any keyboard layout. When you are typing normally, with no modifier
+    down, they are discarded like everything else.
 - No other key ever leaves the hook. Letters, numbers typed without a modifier,
   passwords, and clipboard contents are never observed.
-- Nothing is written to disk, buffered in memory, or transmitted.
+- No keystroke is written to disk, buffered in memory, or transmitted. The only
+  file the hooks ever write is `%APPDATA%\ShareSwitch\errors.log`, and only
+  when something goes wrong: it holds the exception type, message and stack
+  trace — never keys, window titles or screen content.
 - The mouse hook (`WH_MOUSE_LL`) is installed **only while you hold the combo** and
   uninstalled the moment you release it.
 - Both hooks are removed on exit; the app requires no administrator privileges.

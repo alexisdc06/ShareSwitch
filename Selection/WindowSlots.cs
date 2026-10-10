@@ -19,15 +19,31 @@ public sealed class WindowSlots
 
     public WindowSlots() => Array.Fill(_titles, string.Empty);
 
-    /// <summary>Maps a digit key to a slot index, or -1 if it isn't 1–9.</summary>
-    public static int IndexFromKey(System.Windows.Forms.Keys key) => key switch
+    /// <summary>
+    /// Maps a key to slot 0–8 (digits 1–9), or -1. Recognised three ways, so it
+    /// works on every layout and keyboard:
+    /// the virtual key (1–9, NumPad1–9); the physical top-row position (scan
+    /// codes 0x02–0x0A, layout-independent); and the numpad position, which
+    /// Windows reports as End/Down/PgDn/… when Shift is held with Num Lock on.
+    /// </summary>
+    public static int IndexFromKey(System.Windows.Forms.Keys key, int scanCode = 0, bool extended = false)
     {
-        >= System.Windows.Forms.Keys.D1 and <= System.Windows.Forms.Keys.D9
-            => key - System.Windows.Forms.Keys.D1,
-        >= System.Windows.Forms.Keys.NumPad1 and <= System.Windows.Forms.Keys.NumPad9
-            => key - System.Windows.Forms.Keys.NumPad1,
-        _ => -1
-    };
+        if (key >= System.Windows.Forms.Keys.D1 && key <= System.Windows.Forms.Keys.D9)
+            return key - System.Windows.Forms.Keys.D1;
+        if (key >= System.Windows.Forms.Keys.NumPad1 && key <= System.Windows.Forms.Keys.NumPad9)
+            return key - System.Windows.Forms.Keys.NumPad1;
+        if (extended)
+            return -1;   // arrow cluster / navigation block, not digits
+        if (scanCode >= 0x02 && scanCode <= 0x0A)
+            return scanCode - 0x02;
+        return scanCode switch
+        {
+            0x4F => 0, 0x50 => 1, 0x51 => 2,   // numpad 1 2 3
+            0x4B => 3, 0x4C => 4, 0x4D => 5,   // numpad 4 5 6
+            0x47 => 6, 0x48 => 7, 0x49 => 8,   // numpad 7 8 9
+            _ => -1
+        };
+    }
 
     public void Assign(int index, IntPtr hwnd, string title)
     {

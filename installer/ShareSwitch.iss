@@ -61,3 +61,50 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; \
     Flags: nowait postinstall skipifsilent
+
+[Code]
+// Brand header for the inner pages: a taller navy band, white page title,
+// lavender description and a larger app icon, all vertically centred with
+// comfortable padding — instead of Inno's default text hugging the top edge.
+const
+  BrandNavy = $002F1517;      // #17152F as BGR
+  BrandLavender = $00FFBCC2;  // #C2BCFF as BGR
+
+procedure InitializeWizard;
+var
+  PanelH, Delta, Pad, IconSize, TextW, NameH, DescH, Gap, TextTop, ContentGap: Integer;
+begin
+  PanelH := ScaleY(96);
+  Pad := ScaleX(28);
+  IconSize := ScaleY(60);
+  ContentGap := ScaleY(16);
+  Delta := PanelH - WizardForm.MainPanel.Height;
+
+  // Grow the header and push the page content down by the same amount, plus
+  // a little breathing room under the divider.
+  WizardForm.MainPanel.Height := PanelH;
+  WizardForm.MainPanel.Color := BrandNavy;
+  WizardForm.Bevel1.Top := WizardForm.Bevel1.Top + Delta;
+  WizardForm.InnerNotebook.Top := WizardForm.InnerNotebook.Top + Delta + ContentGap;
+  WizardForm.InnerNotebook.Height := WizardForm.InnerNotebook.Height - Delta - ContentGap;
+
+  // Larger icon, centred vertically on the right.
+  WizardForm.WizardSmallBitmapImage.Stretch := True;
+  WizardForm.WizardSmallBitmapImage.BackColor := BrandNavy;
+  WizardForm.WizardSmallBitmapImage.SetBounds(
+    WizardForm.MainPanel.ClientWidth - Pad - IconSize, (PanelH - IconSize) div 2, IconSize, IconSize);
+
+  // Title + description as one block, centred vertically.
+  TextW := WizardForm.MainPanel.ClientWidth - Pad * 3 - IconSize;
+  NameH := ScaleY(26);
+  DescH := ScaleY(34);
+  Gap := ScaleY(2);
+  TextTop := (PanelH - NameH - Gap - DescH) div 2;
+
+  WizardForm.PageNameLabel.Font.Color := clWhite;
+  WizardForm.PageNameLabel.Font.Size := 11;
+  WizardForm.PageNameLabel.SetBounds(Pad, TextTop, TextW, NameH);
+
+  WizardForm.PageDescriptionLabel.Font.Color := BrandLavender;
+  WizardForm.PageDescriptionLabel.SetBounds(Pad, TextTop + NameH + Gap, TextW, DescH);
+end;
