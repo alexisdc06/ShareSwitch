@@ -1,21 +1,26 @@
 <!DOCTYPE html>
 <!--
-  ShareSwitch landing page — source for ac-design.studio/shareswitch.
+  ShareSwitch landing page, source for ac-design.studio/shareswitch.
 
-  Built to be imported into Framer: every section is a plain flex block with
-  real <img>/<video> elements and no decorative pseudo-elements, so the Framer
-  browser extension can copy each section onto the canvas as editable layers.
+  The page sits inside the AC Design Studio shell:
+    1. Studio nav (top)        -> in Framer, drop in the studio's own Nav component
+    2. ShareSwitch product bar -> sticky, so ShareSwitch and its download stay one tap away
+    3. ShareSwitch content
+    4. Studio footer (bottom)  -> in Framer, drop in the studio's own Footer component
+  The shell parts below are faithful stand-ins so this file previews correctly.
 
-  Before launch, search this file for "PRODUCT HUNT" and paste the badge embed
-  code Product Hunt gives you once the launch is scheduled.
+  Built for the Framer import: flex layouts, real <img>/<video> elements,
+  no decorative pseudo-elements.
+
+  Before launch, search this file for "PRODUCT HUNT" and paste the badge embed.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ShareSwitch — Switch the window you share, without stopping the share</title>
-<meta name="description" content="A free Windows app for video calls. Share one window in Teams, Zoom or Meet, then hold Ctrl + Alt and click any other window to switch what everyone sees — instantly.">
-<meta property="og:title" content="ShareSwitch — Hide the mess, Share the focus.">
+<title>ShareSwitch | Switch the window you share, mid-call | AC Design Studio</title>
+<meta name="description" content="A free Windows app for video calls. Share one window in Teams, Zoom or Meet, then hold Ctrl + Alt and click any other window to switch what everyone sees, instantly.">
+<meta property="og:title" content="ShareSwitch. Hide the mess, Share the focus.">
 <meta property="og:description" content="Switch the window you share mid-call, without stopping the share. Free for Windows, open source.">
 <meta property="og:image" content="assets/og-image.png">
 <meta property="og:type" content="website">
@@ -23,137 +28,211 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,300&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,300&family=Raleway:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <style>
+  /* Tokens. Radius rule: buttons are full pills, media 16px, keycaps 8px. */
+  :root {
+    --navy: #17152F; --ink: #0E0C1C; --deep: #12101F; --raise: #201D3E;
+    --violet: #9085FF; --violet-hi: #A69DFF; --violet-lo: #655AD6; --lilac: #C2BCFF;
+    --text: #F2F2F2; --soft: #D6D3F0; --muted: #A8A3D1; --line: #2E2A55;
+    --studio: #121212; --studio-text: #F5F5F5; --studio-muted: #BABABA; --studio-line: #2A2A2A;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
   body {
-    background: #17152F; color: #F2F2F2;
+    background: var(--navy); color: var(--text);
     font-family: "Figtree", "Segoe UI", system-ui, sans-serif;
     font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased;
   }
+  ::selection { background: var(--violet); color: #FFFFFF; }
+  html { scrollbar-color: #3C376D var(--ink); }
   a { color: inherit; text-decoration: none; }
+  a:focus-visible, .btn:focus-visible { outline: 2px solid var(--lilac); outline-offset: 3px; border-radius: 999px; }
   img, video { display: block; max-width: 100%; }
+  h1, h2, h3 { text-wrap: balance; }
 
   .wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 32px; }
-  .accent { font-weight: 300; font-style: italic; color: #9085FF; }
-  .muted { color: #A8A3D1; }
-  .eyebrow { font-family: "Space Grotesk", sans-serif; font-weight: 500; font-size: 13px;
-             letter-spacing: .12em; text-transform: uppercase; color: #9085FF; }
+  .accent { font-weight: 300; font-style: italic; color: var(--violet); }
 
   /* Buttons */
   .btn { display: inline-flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px 0 24px;
-         border-radius: 999px; font-weight: 500; font-size: 17px; white-space: nowrap; }
-  .btn-primary { background: #9085FF; color: #FFFFFF; }
-  .btn-primary:hover { background: #A69DFF; }
+         border-radius: 999px; font-weight: 500; font-size: 17px; white-space: nowrap;
+         transition: transform 160ms var(--ease-out), background-color 200ms var(--ease-out), border-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--violet); color: #FFFFFF; }
+  .btn-primary:hover { background: var(--violet-hi); }
   .btn-badge { width: 38px; height: 38px; border-radius: 999px; background: #FFFFFF;
                display: flex; align-items: center; justify-content: center; }
   .btn-badge img { width: 22px; height: auto; }
-  .btn-ghost { padding: 0 24px; border: 1px solid #3C376D; color: #F2F2F2; }
-  .btn-ghost:hover { border-color: #9085FF; color: #C2BCFF; }
+  .btn-ghost { padding: 0 24px; border: 1px solid #3C376D; color: var(--text); }
+  .btn-ghost:hover { border-color: var(--violet); color: var(--lilac); }
 
-  /* Announcement bar (launch day) */
-  .announce { background: #9085FF; color: #FFFFFF; text-align: center; font-size: 15px; font-weight: 500; padding: 10px 16px; }
+  /* Launch-day bar */
+  .announce { background: var(--violet); color: #FFFFFF; text-align: center; font-size: 15px; font-weight: 500; padding: 10px 16px; }
   .announce a { text-decoration: underline; text-underline-offset: 3px; }
 
-  /* Nav */
-  .nav { position: sticky; top: 0; z-index: 10; background: rgba(23,21,47,.86); backdrop-filter: blur(14px);
-         border-bottom: 1px solid #2B2752; }
-  .nav .wrap { display: flex; align-items: center; height: 72px; gap: 32px; }
-  .nav-logo img { height: 34px; width: auto; }
-  .nav-links { display: flex; gap: 28px; margin-left: auto; font-size: 15px; color: #D6D3F0; }
-  .nav-links a:hover { color: #FFFFFF; }
-  .nav .btn { height: 42px; font-size: 15px; padding: 0 20px; }
+  /* -- Studio shell: nav (stand-in for the studio Nav component) -- */
+  .studio-nav { background: var(--studio); font-family: "Raleway", sans-serif; }
+  .studio-nav .wrap { display: flex; align-items: center; height: 88px; }
+  .studio-logo { display: flex; align-items: center; gap: 14px; color: var(--studio-text);
+                 font-weight: 800; font-size: 15px; letter-spacing: .01em; }
+  .studio-logo img { width: 44px; height: 44px; }
+  .studio-menu { margin-left: auto; width: 48px; height: 48px; border-radius: 999px; background: #1C1C1C;
+                 border: 1px solid #2C2C2C; display: flex; flex-direction: column; align-items: center;
+                 justify-content: center; gap: 4px; }
+  .studio-menu span { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--studio-text); }
 
-  /* Hero */
-  .hero { position: relative; overflow: hidden; padding: 96px 0 72px; background: #0E0C1C; }
+  /* -- ShareSwitch product bar (sticky) -- */
+  .pbar { position: sticky; top: 0; z-index: 10; background: var(--navy); border-bottom: 1px solid #2B2752; }
+  .pbar .wrap { display: flex; align-items: center; height: 68px; gap: 28px; }
+  .crumb { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--muted); }
+  .crumb a:hover { color: #FFFFFF; }
+  .crumb img { height: 28px; width: auto; }
+  .crumb-sep { width: 1px; height: 22px; background: #3C376D; }
+  .pbar-links { display: flex; gap: 26px; margin-left: auto; font-size: 15px; color: var(--soft); }
+  .pbar-links a { transition: color 200ms var(--ease-out); }
+  .pbar-links a:hover { color: #FFFFFF; }
+  .pbar .btn { height: 42px; font-size: 15px; padding: 0 20px; }
+
+  /* -- Hero -- */
+  .hero { position: relative; overflow: hidden; padding: 88px 0 0; background: var(--ink); }
   .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; }
-  .hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(23,21,47,.92) 0%, rgba(23,21,47,.70) 45%, rgba(23,21,47,0) 80%); }
+  .hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(23,21,47,.94) 0%, rgba(23,21,47,.74) 45%, rgba(23,21,47,.10) 85%); }
   .hero .wrap { position: relative; display: flex; flex-direction: column; gap: 28px; }
-  .hero h1 { font-size: 84px; line-height: 1.0; font-weight: 700; letter-spacing: -.02em; max-width: 760px; }
-  .hero-sub { font-size: 21px; color: #D6D3F0; max-width: 620px; }
+  .hero h1 { font-size: 84px; line-height: 1.04; font-weight: 700; letter-spacing: -.025em; max-width: 760px; padding-bottom: 4px; }
+  .hero-sub { font-size: 21px; color: var(--soft); max-width: 560px; }
   .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
-  .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; }
-  .chip { font-size: 14px; color: #D6D3F0; border: 1px solid #4B4685; border-radius: 999px; padding: 6px 14px; }
-  .ph-slot { display: flex; align-items: center; min-height: 54px; }
-  .ph-placeholder { display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 18px;
-                    border: 1px dashed #9085FF; border-radius: 10px; color: #C2BCFF; font-size: 14px; }
+  .media { margin-top: 36px; border-radius: 16px 16px 0 0; overflow: hidden; background: var(--ink);
+           box-shadow: 0 -2px 0 rgba(144,133,255,.35), 0 30px 80px rgba(8,6,20,.6); }
+  .media video { width: 100%; height: auto; }
 
-  /* Demo window (mimics the ShareSwitch window chrome) */
-  .demo { position: relative; margin-top: 56px; }
-  .window { border-radius: 14px; overflow: hidden; border: 2px solid #9085FF; background: #0E0C1C;
-            box-shadow: 0 40px 120px rgba(0,0,0,.55), 0 0 0 8px rgba(144,133,255,.08); }
-  .window-bar { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 16px; background: #9085FF;
-                color: #FFFFFF; font-size: 14px; font-weight: 500; }
-  .window-bar img { width: 18px; height: auto; }
-  .window-dots { margin-left: auto; display: flex; gap: 18px; opacity: .9; }
-  .window video { width: 100%; height: auto; }
+  /* Facts strip, directly under the hero */
+  .facts { background: var(--deep); border-top: 1px solid #2B2752; }
+  .facts .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0; min-height: 96px; }
+  .fact { display: flex; flex-direction: column; padding: 18px 32px 18px 0; margin-right: 32px; border-right: 1px solid var(--line); }
+  .fact:last-of-type { border-right: 0; }
+  .fact strong { font-size: 17px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .fact span { font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .ph-slot { margin-left: auto; display: flex; align-items: center; min-height: 54px; }
+  .ph-placeholder { display: inline-flex; align-items: center; height: 54px; padding: 0 18px;
+                    border: 1px dashed var(--violet); border-radius: 10px; color: var(--lilac); font-size: 14px; }
 
   /* Sections */
-  section { padding: 112px 0; }
-  .section-head { display: flex; flex-direction: column; gap: 14px; max-width: 720px; margin-bottom: 56px; }
-  .section-head h2 { font-size: 52px; line-height: 1.06; font-weight: 700; letter-spacing: -.015em; }
-  .section-head p { font-size: 19px; color: #A8A3D1; }
-  .alt { background: #12101F; }
+  section { padding: 128px 0; }
+  .alt { background: var(--deep); }
+  h2 { font-size: 52px; line-height: 1.08; font-weight: 700; letter-spacing: -.02em; }
+  .lede { font-size: 19px; color: var(--muted); max-width: 60ch; }
+  .head { display: flex; flex-direction: column; gap: 18px; max-width: 720px; margin-bottom: 64px; }
 
-  /* How it works */
-  .steps { display: flex; gap: 24px; }
-  .step { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 32px; border-radius: 18px;
-          background: #201D3E; border: 1px solid #2E2A55; }
-  .step-num { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px; color: #9085FF; }
-  .step h3 { font-size: 24px; line-height: 1.2; font-weight: 700; }
-  .step p { color: #A8A3D1; font-size: 16px; }
+  /* How it works: sticky intro left, ordered steps right */
+  .how { display: flex; gap: 80px; align-items: flex-start; }
+  .how-intro { flex: 0 0 400px; position: sticky; top: 124px; display: flex; flex-direction: column; gap: 18px; }
+  .steps { flex: 1; display: flex; flex-direction: column; list-style: none; counter-reset: step; }
+  .steps li { display: flex; gap: 28px; padding: 36px 0; border-bottom: 1px solid var(--line); counter-increment: step; }
+  .steps li:first-child { padding-top: 6px; }
+  .step-n { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 999px; border: 1px solid #3C376D;
+            display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; color: var(--lilac); }
+  .step-body { display: flex; flex-direction: column; gap: 10px; }
+  .step-body h3 { font-size: 30px; line-height: 1.15; font-weight: 700; letter-spacing: -.01em;
+                  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .step-body p { color: var(--muted); font-size: 17px; max-width: 52ch; }
 
-  /* Video */
-  .video-frame { border-radius: 18px; overflow: hidden; border: 1px solid #2E2A55; background: #000; }
-  .video-frame video { width: 100%; height: auto; }
+  /* Keycaps */
+  .key { font-weight: 600; font-size: 15px; line-height: 1; color: #FFFFFF; background: var(--violet);
+         border-bottom: 3px solid var(--violet-lo); border-radius: 8px; padding: 8px 12px 6px; }
+  .key-lg { font-size: 20px; padding: 9px 14px 7px; }
+  .plus { color: var(--muted); font-weight: 400; }
 
-  /* Shortcuts */
-  .shortcuts { display: flex; flex-direction: column; border-top: 1px solid #2E2A55; }
-  .shortcut { display: flex; align-items: center; gap: 32px; padding: 22px 0; border-bottom: 1px solid #2E2A55; }
-  .keys { display: flex; align-items: center; gap: 8px; width: 380px; flex-shrink: 0; color: #A8A3D1; }
-  .key { font-family: "Space Grotesk", sans-serif; font-weight: 500; font-size: 15px; color: #FFFFFF;
-         background: #9085FF; border-bottom: 3px solid #655AD6; border-radius: 8px; padding: 5px 12px; }
-  .shortcut p { font-size: 18px; }
+  /* Demo */
+  .demo-frame { border-radius: 16px; overflow: hidden; background: #08070F;
+                box-shadow: 0 30px 80px rgba(8,6,20,.55); }
+  .demo-frame video { width: 100%; height: auto; }
 
-  /* Privacy */
-  .trust { display: flex; flex-wrap: wrap; gap: 24px; }
-  .trust-item { flex: 1 1 calc(50% - 12px); display: flex; flex-direction: column; gap: 10px; padding: 28px 32px;
-                border-left: 2px solid #9085FF; background: #201D3E; border-radius: 0 14px 14px 0; }
-  .trust-item h3 { font-size: 20px; font-weight: 700; }
-  .trust-item p { color: #A8A3D1; font-size: 16px; }
-  .trust-item code { font-family: "Space Grotesk", monospace; color: #C2BCFF; font-size: 15px; }
+  /* Shortcuts: list left, real capture right */
+  .shortcuts-wrap { display: flex; gap: 64px; align-items: center; }
+  .shortcuts { flex: 1; display: flex; flex-direction: column; }
+  .shortcut { display: flex; flex-direction: column; gap: 12px; padding: 26px 0; border-bottom: 1px solid var(--line); }
+  .shortcut:last-child { border-bottom: 0; }
+  .keys { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); }
+  .shortcut p { font-size: 18px; color: var(--soft); }
+  .capture { flex: 0 0 480px; display: flex; flex-direction: column; gap: 14px; }
+  .capture img { border-radius: 16px; box-shadow: 0 30px 70px rgba(8,6,20,.55); }
+  .capture p { font-size: 15px; color: var(--muted); }
+
+  /* Privacy: 2 x 2, hairline above each item, no boxes */
+  .trust { display: flex; flex-wrap: wrap; column-gap: 64px; }
+  .trust-item { flex: 1 1 calc(50% - 32px); display: flex; flex-direction: column; gap: 10px; padding: 32px 0 40px;
+                border-top: 1px solid #3C376D; }
+  .trust-item h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
+  .trust-item p { color: var(--muted); font-size: 17px; max-width: 48ch; }
 
   /* FAQ */
-  .faq { display: flex; flex-direction: column; border-top: 1px solid #2E2A55; }
-  .qa { display: flex; gap: 48px; padding: 28px 0; border-bottom: 1px solid #2E2A55; }
-  .qa h3 { width: 380px; flex-shrink: 0; font-size: 19px; line-height: 1.35; font-weight: 600; }
-  .qa p { color: #A8A3D1; font-size: 16px; }
+  .faq { display: flex; flex-direction: column; }
+  .qa { display: flex; gap: 64px; padding: 30px 0; border-bottom: 1px solid var(--line); }
+  .qa:last-child { border-bottom: 0; }
+  .qa h3 { flex: 0 0 380px; font-size: 19px; line-height: 1.4; font-weight: 600; }
+  .qa p { color: var(--muted); font-size: 17px; max-width: 62ch; }
+  .qa a { color: var(--lilac); text-decoration: underline; text-underline-offset: 3px; }
 
   /* Final CTA */
-  .cta { position: relative; overflow: hidden; padding: 128px 0; background: #0E0C1C; }
-  .cta .wrap { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
-  .cta h2 { font-size: 60px; line-height: 1.04; font-weight: 700; letter-spacing: -.015em; max-width: 760px; }
+  .cta { position: relative; overflow: hidden; padding: 136px 0; background: var(--ink); }
+  .cta .wrap { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 32px; }
+  .cta h2 { font-size: 60px; max-width: 760px; }
+  .cta .ph-slot { margin-left: 0; }
 
-  /* Footer */
-  footer { padding: 40px 0; border-top: 1px solid #2B2752; font-size: 15px; color: #A8A3D1; }
-  footer .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
-  footer .links { display: flex; gap: 24px; margin-left: auto; }
-  footer a:hover { color: #FFFFFF; }
+  /* -- Studio shell: footer (stand-in for the studio Footer component) -- */
+  .studio-foot { background: var(--studio); color: var(--studio-text); font-family: "Raleway", sans-serif; padding: 96px 0 40px; }
+  .sf-top { display: flex; align-items: center; gap: 32px; padding-bottom: 64px; border-bottom: 1px solid var(--studio-line); }
+  .sf-top img { width: 96px; height: 96px; }
+  .sf-top h2 { font-family: "Raleway", sans-serif; font-size: 44px; font-weight: 800; letter-spacing: -.01em; max-width: 420px; }
+  .sf-contact { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+  .sf-btn { display: inline-flex; align-items: center; height: 48px; padding: 0 24px; border-radius: 999px;
+            background: #2F6BFF; color: #FFFFFF; font-weight: 700; font-size: 15px; }
+  .sf-mail { font-weight: 700; font-size: 17px; }
+  .sf-cols { display: flex; gap: 48px; padding: 48px 0; border-bottom: 1px solid var(--studio-line); }
+  .sf-about { flex: 0 0 260px; display: flex; flex-direction: column; gap: 12px; }
+  .sf-about strong { font-weight: 800; font-size: 16px; }
+  .sf-about p, .sf-col span { font-size: 14px; color: var(--studio-muted); line-height: 1.55; }
+  .sf-col { flex: 1; display: flex; flex-direction: column; gap: 10px; font-size: 15px; }
+  .sf-col h4 { font-size: 13px; font-weight: 500; color: var(--studio-muted); margin-bottom: 4px; }
+  .sf-col a:hover { color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px; }
+  .sf-col .here { color: #FFFFFF; font-weight: 700; }
+  .sf-bottom { display: flex; align-items: center; padding-top: 28px; font-size: 13px; color: var(--studio-muted); }
+  .sf-bottom a { color: var(--studio-text); }
 
-  @media (max-width: 860px) {
-    .nav-links { display: none; }
-    .hero h1 { font-size: 52px; }
-    .section-head h2, .cta h2 { font-size: 38px; }
-    .steps, .shortcut, .qa { flex-direction: column; gap: 14px; }
-    .keys, .qa h3 { width: auto; }
+  /* One authored moment: the hero settles in. Already visible by default. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero h1, .hero-sub, .hero-actions, .media { animation: rise 900ms var(--ease-out) both; }
+    .hero-sub { animation-delay: 60ms; } .hero-actions { animation-delay: 120ms; } .media { animation-delay: 200ms; }
+    @keyframes rise { from { opacity: .001; transform: translateY(14px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+
+  @media (max-width: 960px) {
+    .pbar-links { display: none; }
+    .hero h1 { font-size: 54px; }
+    h2, .cta h2 { font-size: 38px; }
+    .how, .shortcuts-wrap, .qa, .sf-top, .sf-cols { flex-direction: column; gap: 28px; align-items: flex-start; }
+    .how-intro { position: static; flex-basis: auto; }
+    .capture { flex-basis: auto; width: 100%; }
+    .qa h3 { flex-basis: auto; }
     .trust-item { flex-basis: 100%; }
-    section { padding: 80px 0; }
+    .fact { border-right: 0; margin-right: 0; padding-right: 24px; }
+    .ph-slot { margin-left: 0; padding-bottom: 18px; }
+    .sf-contact { margin-left: 0; align-items: flex-start; }
+    section { padding: 88px 0; }
     .wrap { padding: 0 22px; }
+    .crumb .crumb-studio, .crumb-sep { display: none; }
+  }
+  @media (max-width: 560px) {
+    .hero h1 { font-size: 44px; }
     .btn { font-size: 15px; height: 48px; padding: 0 6px 0 18px; }
     .btn-ghost { padding: 0 18px; }
     .btn-badge { width: 34px; height: 34px; }
+    .pbar .btn { padding: 0 16px; }
+    .step-body h3 { font-size: 24px; }
   }
 </style>
 </head>
@@ -161,139 +240,159 @@
 
 <!-- Launch-day bar: point it at the Product Hunt page; remove after launch week. -->
 <div class="announce">
-  ShareSwitch is live on Product Hunt today —
-  <a href="https://www.producthunt.com/products/shareswitch">come share your feedback →</a>
+  ShareSwitch is live on Product Hunt today.
+  <a href="https://www.producthunt.com/products/shareswitch">Come share your feedback</a>
 </div>
 
-<!-- ── Nav ─────────────────────────────────────────────────────────── -->
-<header class="nav">
+<!-- -- Studio nav: replace with the AC Design Studio Nav component in Framer -- -->
+<header class="studio-nav">
   <div class="wrap">
-    <a class="nav-logo" href="#top"><img src="assets/lockup-white.png" alt="ShareSwitch"></a>
-    <nav class="nav-links">
+    <a class="studio-logo" href="https://www.ac-design.studio/">
+      <img src="https://framerusercontent.com/images/IBIBjBwVF3CqQF2qlU8OS08FQY.png?width=533&height=533" alt="">
+      AC DESIGN STUDIO
+    </a>
+    <a class="studio-menu" href="https://www.ac-design.studio/" aria-label="Open the studio menu"><span></span><span></span><span></span></a>
+  </div>
+</header>
+
+<!-- -- ShareSwitch product bar (sticky) -- -->
+<nav class="pbar" aria-label="ShareSwitch">
+  <div class="wrap">
+    <div class="crumb">
+      <a class="crumb-studio" href="https://www.ac-design.studio/lab">Lab</a>
+      <span class="crumb-sep"></span>
+      <a href="#top"><img src="assets/lockup-white.png" alt="ShareSwitch"></a>
+    </div>
+    <div class="pbar-links">
       <a href="#how">How it works</a>
       <a href="#demo">Demo</a>
       <a href="#shortcuts">Shortcuts</a>
       <a href="#privacy">Privacy</a>
       <a href="#faq">FAQ</a>
-    </nav>
-    <a class="btn btn-primary" href="https://github.com/alexisdc06/ShareSwitch/releases/latest">Download</a>
+    </div>
+    <a class="btn btn-primary" href="https://github.com/alexisdc06/ShareSwitch/releases/latest">Download for Windows</a>
   </div>
-</header>
+</nav>
 
-<!-- ── Hero ────────────────────────────────────────────────────────── -->
+<main>
+
+<!-- -- Hero -- -->
 <div class="hero" id="top">
   <img class="hero-bg" src="assets/backdrop.jpg" alt="">
   <div class="hero-shade"></div>
   <div class="wrap">
-    <span class="eyebrow">Free for Windows · Open source</span>
     <h1>Hide the <span class="accent">mess,</span><br>Share the <span class="accent">focus.</span></h1>
-    <p class="hero-sub">Share one window in Teams, Zoom or Meet. Then hold Ctrl + Alt and click any other window —
-      your call sees it instantly. No stopping, no re-sharing, no dead air.</p>
+    <p class="hero-sub">Share one window in Teams, Zoom or Meet, then hold Ctrl + Alt and click another. Your call sees it instantly.</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="https://github.com/alexisdc06/ShareSwitch/releases/latest">
-        Download free for Windows
+        Download for Windows
         <span class="btn-badge"><img src="assets/icon-128.png" alt=""></span>
       </a>
-      <a class="btn btn-ghost" href="#demo">Watch the 30-second demo</a>
+      <a class="btn btn-ghost" href="#demo">Watch the demo</a>
     </div>
-    <div class="ph-slot">
-      <!-- PRODUCT HUNT: replace this placeholder with the badge embed code from your launch page -->
-      <span class="ph-placeholder">Product Hunt badge goes here</span>
-    </div>
-    <div class="hero-meta">
-      <span class="chip">Windows 10 &amp; 11</span>
-      <span class="chip">No account</span>
-      <span class="chip">No telemetry</span>
-      <span class="chip">No admin rights</span>
-    </div>
-
-    <div class="demo">
-      <div class="window">
-        <div class="window-bar">
-          <img src="assets/icon-128.png" alt="">
-          ● ShareSwitch — mirroring what your call sees
-          <span class="window-dots"><span>—</span><span>☐</span><span>✕</span></span>
-        </div>
-        <video src="assets/demo-loop.mp4" poster="assets/demo-loop-poster.jpg" autoplay muted loop playsinline></video>
-      </div>
+    <div class="media">
+      <video src="assets/demo-loop.mp4" poster="assets/demo-loop-poster.jpg" autoplay muted loop playsinline
+             aria-label="Holding Ctrl + Alt and clicking a window switches what the ShareSwitch window shows"></video>
     </div>
   </div>
 </div>
 
-<!-- ── How it works ───────────────────────────────────────────────── -->
-<section id="how">
+<!-- -- Facts -- -->
+<div class="facts">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">How it works</span>
+    <div class="fact"><strong>Free</strong><span>Open source, MIT</span></div>
+    <div class="fact"><strong>Windows 10 &amp; 11</strong><span>Installer or portable</span></div>
+    <div class="fact"><strong>No account</strong><span>Nothing to sign up for</span></div>
+    <div class="fact"><strong>No telemetry</strong><span>No network code at all</span></div>
+    <div class="ph-slot">
+      <!-- PRODUCT HUNT: replace this placeholder with the badge embed code from your launch page -->
+      <span class="ph-placeholder">Product Hunt badge goes here</span>
+    </div>
+  </div>
+</div>
+
+<!-- -- How it works -- -->
+<section id="how">
+  <div class="wrap how">
+    <div class="how-intro">
       <h2>One window. <span class="accent">Any content.</span></h2>
-      <p>ShareSwitch opens a window that mirrors any other window, live. You share that one window once —
-         every switch after that happens inside it.</p>
+      <p class="lede">ShareSwitch opens a window that mirrors any other window, live. You share that one window once, and every switch after that happens inside it.</p>
     </div>
-    <div class="steps">
-      <div class="step">
-        <span class="step-num">01</span>
-        <h3>Share the ShareSwitch window</h3>
-        <p>In your call, pick “ShareSwitch” from the window list. You do this once, at the start.</p>
-      </div>
-      <div class="step">
-        <span class="step-num">02</span>
-        <h3>Hold Ctrl + Alt</h3>
-        <p>A violet frame follows your cursor, showing which window you're about to send.</p>
-      </div>
-      <div class="step">
-        <span class="step-num">03</span>
-        <h3>Click. Switched.</h3>
-        <p>Your call sees the new window immediately. Nobody waits, nobody asks “can you see it now?”.</p>
-      </div>
-    </div>
+    <ol class="steps">
+      <li>
+        <span class="step-n" aria-hidden="true">1</span>
+        <div class="step-body">
+          <h3>Share the ShareSwitch window</h3>
+          <p>In your call, pick ShareSwitch from the window list. You do this once, at the start.</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-n" aria-hidden="true">2</span>
+        <div class="step-body">
+          <h3>Hold <span class="key key-lg">Ctrl</span><span class="plus">+</span><span class="key key-lg">Alt</span></h3>
+          <p>A violet frame follows your cursor and shows the window you're about to send.</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-n" aria-hidden="true">3</span>
+        <div class="step-body">
+          <h3>Click. <span class="accent">Switched.</span></h3>
+          <p>Your call sees the new window immediately. Nobody waits, and nobody asks if they can see it now.</p>
+        </div>
+      </li>
+    </ol>
   </div>
 </section>
 
-<!-- ── Demo video ─────────────────────────────────────────────────── -->
+<!-- -- Demo video -- -->
 <section id="demo" class="alt">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Demo</span>
-      <h2>See it in <span class="accent">30 seconds.</span></h2>
+    <div class="head">
+      <h2>See it in <span class="accent">40 seconds.</span></h2>
     </div>
-    <div class="video-frame">
+    <div class="demo-frame">
       <video src="assets/launch-video.mp4" poster="assets/launch-video-poster.jpg" controls playsinline preload="metadata"></video>
     </div>
   </div>
 </section>
 
-<!-- ── Shortcuts ──────────────────────────────────────────────────── -->
+<!-- -- Shortcuts -- -->
 <section id="shortcuts">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Shortcuts</span>
+    <div class="head">
       <h2>Faster than finding <span class="accent">the right thumbnail.</span></h2>
-      <p>Save the windows you present most, then jump straight to them from anywhere.</p>
+      <p class="lede">Save the windows you present most, then jump straight to them from anywhere.</p>
     </div>
-    <div class="shortcuts">
-      <div class="shortcut">
-        <div class="keys"><span class="key">Ctrl</span>+<span class="key">Alt</span>+ click</div>
-        <p>Mirror the window you click</p>
+    <div class="shortcuts-wrap">
+      <div class="shortcuts">
+        <div class="shortcut">
+          <div class="keys"><span class="key">Ctrl</span><span class="plus">+</span><span class="key">Alt</span><span class="plus">+ click</span></div>
+          <p>Mirror the window you click</p>
+        </div>
+        <div class="shortcut">
+          <div class="keys"><span class="key">Ctrl</span><span class="plus">+</span><span class="key">Alt</span><span class="plus">+</span><span class="key">Shift</span><span class="plus">+</span><span class="key">1-9</span></div>
+          <p>Save the window under your cursor to a number. Click instead of a number to use the next free one.</p>
+        </div>
+        <div class="shortcut">
+          <div class="keys"><span class="key">Ctrl</span><span class="plus">+</span><span class="key">Alt</span><span class="plus">+</span><span class="key">1-9</span></div>
+          <p>Jump straight to that window</p>
+        </div>
       </div>
-      <div class="shortcut">
-        <div class="keys"><span class="key">Ctrl</span>+<span class="key">Alt</span>+<span class="key">Shift</span>+<span class="key">1–9</span></div>
-        <p>Save the window under your cursor to a number — or just click it to use the next free one</p>
-      </div>
-      <div class="shortcut">
-        <div class="keys"><span class="key">Ctrl</span>+<span class="key">Alt</span>+<span class="key">1–9</span></div>
-        <p>Jump straight to that window</p>
-      </div>
+      <figure class="capture">
+        <img src="assets/save-to-number.jpg" width="676" height="448" loading="lazy"
+             alt="A window framed in green with a large number 1 badge, confirming it was saved to Ctrl + Alt + 1">
+        <p>Saving turns the frame green and shows the number it's stored under.</p>
+      </figure>
     </div>
   </div>
 </section>
 
-<!-- ── Privacy ────────────────────────────────────────────────────── -->
+<!-- -- Privacy -- -->
 <section id="privacy" class="alt">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Privacy</span>
+    <div class="head">
       <h2>Built to be <span class="accent">trusted.</span></h2>
-      <p>It's a screen-sharing tool with a global hotkey. You should be sceptical of that — so here's exactly what it does.</p>
+      <p class="lede">It's a screen-sharing tool with a global hotkey. You should be sceptical of that, so here's exactly what it does.</p>
     </div>
     <div class="trust">
       <div class="trust-item">
@@ -302,8 +401,7 @@
       </div>
       <div class="trust-item">
         <h3>A minimal keyboard hook</h3>
-        <p>Only modifiers, Escape, digits and arrows pass — and digits and arrows only while a modifier is held.
-           Everything you type is discarded inside the hook.</p>
+        <p>Only modifiers, Escape, digits and arrows pass, and digits and arrows only while a modifier is held. Everything you type is discarded inside the hook.</p>
       </div>
       <div class="trust-item">
         <h3>Only the window you pick</h3>
@@ -311,26 +409,25 @@
       </div>
       <div class="trust-item">
         <h3>Open source, MIT</h3>
-        <p>Every line is on GitHub. No admin rights needed, and a portable version needs no install at all.</p>
+        <p>Every line is on GitHub. No admin rights needed, and the portable version needs no install at all.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── FAQ ────────────────────────────────────────────────────────── -->
+<!-- -- FAQ -- -->
 <section id="faq">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">FAQ</span>
+    <div class="head">
       <h2>Questions</h2>
     </div>
     <div class="faq">
       <div class="qa">
         <h3>Windows says “Windows protected your PC”. Is that a problem?</h3>
-        <p>That's SmartScreen reacting to a new, unsigned app — not a detection of anything harmful. Click
-           <em>More info → Run anyway</em>, or build it from source if you'd rather verify it yourself.
-           The installer <a href="https://www.virustotal.com/gui/file/c9b77bc4fe9806f60ff046443d6c5a9170028cb247c82c0a08b897b65351ece7" style="color:#C2BCFF;text-decoration:underline">scans clean on VirusTotal</a>
-           — 0 of 69 security vendors flagged it.</p>
+        <p>That's SmartScreen reacting to a new, unsigned app, not a detection of anything harmful. Click
+           <em>More info</em>, then <em>Run anyway</em>, or build it from source if you'd rather verify it yourself.
+           The installer <a href="https://www.virustotal.com/gui/file/c9b77bc4fe9806f60ff046443d6c5a9170028cb247c82c0a08b897b65351ece7">scans clean on VirusTotal</a>:
+           0 of 69 security vendors flagged it.</p>
       </div>
       <div class="qa">
         <h3>Does it work with my video call app?</h3>
@@ -339,12 +436,12 @@
       </div>
       <div class="qa">
         <h3>Do viewers see my mouse cursor?</h3>
-        <p>Not yet — the Windows feature used for mirroring doesn't include it. Great for documents, designs
+        <p>Not yet. The Windows feature used for mirroring doesn't include it. Great for documents, designs
            and dashboards; less so for demonstrating precise clicks.</p>
       </div>
       <div class="qa">
         <h3>Does it slow my computer down?</h3>
-        <p>No. The mirror is drawn by the Windows compositor itself — no video encoding, no capture loop.
+        <p>No. The mirror is drawn by the Windows compositor itself: no video encoding, no capture loop.
            It idles at essentially zero CPU.</p>
       </div>
       <div class="qa">
@@ -356,7 +453,7 @@
   </div>
 </section>
 
-<!-- ── Final CTA ──────────────────────────────────────────────────── -->
+<!-- -- Final CTA -- -->
 <div class="cta">
   <img class="hero-bg" src="assets/backdrop.jpg" alt="">
   <div class="hero-shade"></div>
@@ -364,7 +461,7 @@
     <h2>Stop saying <span class="accent">“can you see my screen now?”</span></h2>
     <div class="hero-actions">
       <a class="btn btn-primary" href="https://github.com/alexisdc06/ShareSwitch/releases/latest">
-        Download free for Windows
+        Download for Windows
         <span class="btn-badge"><img src="assets/icon-128.png" alt=""></span>
       </a>
       <a class="btn btn-ghost" href="https://github.com/alexisdc06/ShareSwitch">View on GitHub</a>
@@ -376,15 +473,47 @@
   </div>
 </div>
 
-<!-- ── Footer ─────────────────────────────────────────────────────── -->
-<footer>
+</main>
+
+<!-- -- Studio footer: replace with the AC Design Studio Footer component in Framer.
+     Add the "ShareSwitch" link to the real footer too, so visitors can find their way back. -- -->
+<footer class="studio-foot">
   <div class="wrap">
-    <span>Designed and built by <a href="https://ac-design.studio"><strong>AC Design Studio</strong></a> · prototyped in public on A Life of Design</span>
-    <span class="links">
-      <a href="https://github.com/alexisdc06/ShareSwitch">GitHub</a>
-      <a href="https://github.com/alexisdc06/ShareSwitch/blob/main/SECURITY.md">Security</a>
-      <a href="https://github.com/alexisdc06/ShareSwitch/issues">Feedback</a>
-    </span>
+    <div class="sf-top">
+      <img src="https://framerusercontent.com/images/IBIBjBwVF3CqQF2qlU8OS08FQY.png?width=533&height=533" alt="AC Design Studio">
+      <h2>Have a project in mind?</h2>
+      <div class="sf-contact">
+        <a class="sf-btn" href="https://calendly.com/alex-b5ld/30min">Book your call now</a>
+        <a class="sf-mail" href="mailto:info@ac-design.studio">info@ac-design.studio</a>
+      </div>
+    </div>
+    <div class="sf-cols">
+      <div class="sf-about">
+        <strong>AC DESIGN STUDIO</strong>
+        <p>We design brands, websites and digital products that hold up in the real world. Based in Phnom Penh, working with clients worldwide.</p>
+      </div>
+      <div class="sf-col">
+        <h4>Studio</h4>
+        <a href="https://www.ac-design.studio/">Home</a>
+        <a href="https://www.ac-design.studio/project">Projects</a>
+        <a href="https://www.ac-design.studio/lab">Lab</a>
+        <a href="https://www.ac-design.studio/about">About</a>
+      </div>
+      <div class="sf-col">
+        <h4>Products</h4>
+        <a class="here" href="#top">ShareSwitch</a>
+        <a href="https://github.com/alexisdc06/ShareSwitch">ShareSwitch on GitHub</a>
+      </div>
+      <div class="sf-col">
+        <h4>Founders</h4>
+        <a href="https://www.ac-design.studio/design-minute#thursday">Design Minute</a>
+        <a href="https://www.ac-design.studio/design-minute#cohort">For incubators</a>
+        <span>43 Street 95, Phnom Penh, Cambodia</span>
+      </div>
+    </div>
+    <div class="sf-bottom">
+      <span>© 2026 AC Design Studio. A studio of ACR Creation Pte Ltd, alongside <a href="https://www.wearethreadworks.com">Threadworks</a>.</span>
+    </div>
   </div>
 </footer>
 

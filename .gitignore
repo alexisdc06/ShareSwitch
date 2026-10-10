@@ -18,3 +18,7 @@ branding/
 
 # Launch asset work-in-progress (drafts, stand-in fonts)
 launch/
+
+# Agent skills (installed locally with npx skills / impeccable)
+.claude/
+skills-lock.json

@@ -1,70 +1,65 @@
-# ShareSwitch landing page — Framer build brief
+# ShareSwitch page: Framer build brief
 
-`index.html` in this folder is a working reference (structure + copy, not a design
-you have to keep). Open it in a browser to see the flow. Rebuild it properly in
-Framer — you'll do it better.
+`index.html` is the reference build for `ac-design.studio/shareswitch`. Open it in a
+browser to see the flow, then rebuild or import it into the studio site.
 
-## Where to host it
+## The page lives inside the studio
 
-**Recommended: a page on your existing site → `ac-design.studio/shareswitch`.**
-Framer bills **per site**, so a separate ShareSwitch site — or a
-`shareswitch.ac-design.studio` subdomain, which needs its own site — means a
-second plan (~$10/mo). A new *page* on the studio site costs nothing, feeds
-traffic to your domain, and doubles as a portfolio case study.
+```
+Studio Nav          <- the studio's own Nav component (scrolls away)
+ShareSwitch bar     <- sticky: Lab / ShareSwitch, section links, Download
+ShareSwitch content <- hero, facts, how it works, demo, shortcuts, privacy, FAQ, CTA
+Studio Footer       <- the studio's own Footer component
+```
 
-If you ever want a standalone domain (`shareswitch.app`), that's a new Framer
-site plus the domain. Not worth it until the app has traction.
+The studio nav and footer let visitors explore the studio. The sticky ShareSwitch bar
+is what stops them getting lost on this page: wherever they scroll, the product name,
+the sections and the download button stay one tap away. The studio nav and footer in
+`index.html` are stand-ins. In Framer, delete them and drop in the real components.
 
-Free fallback if you'd rather not touch the studio site: GitHub Pages can serve
-this HTML file from the repo at no cost.
+## Making the page easy to come back to
+
+People who leave for the studio pages need a road back. Three small edits on the
+studio site do it:
+
+1. **Lab page**: add ShareSwitch as a card in the working-products part of `/lab`.
+   This is where it belongs, and the bar's "Lab" link already points there.
+2. **Studio footer**: add a "Products" column (or a line under Lab) with
+   **ShareSwitch** linking to `/shareswitch`. Every studio page then links back.
+3. **Studio menu**: optional, add ShareSwitch under Lab in the hamburger menu.
 
 ## Sections, in order
 
 | # | Section | Job |
 |---|---|---|
-| 1 | **Hero** | Headline, one-line explanation, download button, demo GIF |
-| 2 | **How it works** | Three steps: share once → hold hotkey → click |
-| 3 | **Shortcuts** | Table of key combos — shows depth without a features list |
-| 4 | **Privacy** | Pre-empts "why does it need a keyboard hook?" |
-| 5 | **FAQ** | SmartScreen, macOS, cursor, performance, app support |
-| 6 | **Final CTA** | One button |
-| 7 | **Footer** | MIT, AC Design Studio, GitHub, bug reports |
+| 1 | Hero | Headline, one sentence, download button, demo loop |
+| 2 | Facts | Free, Windows 10 & 11, no account, no telemetry, Product Hunt badge |
+| 3 | How it works | Three ordered steps next to a sticky intro |
+| 4 | Demo | The launch video |
+| 5 | Shortcuts | Key combos plus a real capture of a saved window |
+| 6 | Privacy | Answers "why does it need a keyboard hook?" |
+| 7 | FAQ | SmartScreen, app support, cursor, performance, macOS |
+| 8 | Final CTA | Download and GitHub |
 
-## Copy (edit freely — this is a first draft, not a spec)
+## House rules for this page
 
-**H1:** Change the window you're sharing. Without stopping the share.
+- No em dashes or en dashes anywhere, including titles and meta descriptions.
+- No small uppercase labels above headings. The heading does the work.
+- One label per action: the download button always reads "Download for Windows".
+- Radius rule: buttons are full pills, media is 16px, keycaps are 8px.
 
-**Sub:** Share one window in Teams, Zoom or Meet. Then hold a hotkey, click any
-other window, and that's what everyone sees — instantly. No "let me re-share",
-no dead air.
+## Links
 
-**Buttons:** Download for Windows · View source
-
-**Under the buttons:** Free and open source · Windows 10 & 11 · No admin rights · No
-account, no telemetry
-
-**Final CTA:** Stop saying "can you see my screen now?"
-
-## The one thing that matters most
-
-The **demo GIF in the hero**. This product is almost impossible to explain in
-text and instantly obvious in motion. Everything above the fold exists to get
-people to watch it. If you only polish one asset, polish that one.
-
-Show the viewer's side of the call, so the "they never noticed" claim is visible
-rather than asserted. Storyboard is in `../docs/LAUNCH.md`.
-
-## Links to wire up
-
-- Download → `https://github.com/alexisdc06/ShareSwitch/releases/latest`
-- Source → `https://github.com/alexisdc06/ShareSwitch`
-- Bugs → `https://github.com/alexisdc06/ShareSwitch/issues`
+- Download: `https://github.com/alexisdc06/ShareSwitch/releases/latest`
+- Source: `https://github.com/alexisdc06/ShareSwitch`
+- Bugs: `https://github.com/alexisdc06/ShareSwitch/issues`
 
 ## Before publishing
 
-- [ ] Page title + meta description (Framer → Page settings). Draft title:
-      *ShareSwitch — Switch the window you're sharing, without stopping the share*
-- [ ] OG image for link previews — reuse `../assets/social-preview.png` (1280×640)
-- [ ] Check it on a phone: nobody installs a Windows app from their phone, but
-      plenty of people will open the link there first
-- [ ] Add the URL to the GitHub repo's About panel, and to the Product Hunt listing
+- [ ] Page title and meta description (Framer, Page settings). Use the ones in
+      `index.html`.
+- [ ] OG image: `assets/og-image.png`
+- [ ] Upload `demo-loop.mp4` and `launch-video.mp4` as Framer Video components
+- [ ] Paste the Product Hunt badge embed in both badge slots
+- [ ] Check it on a phone
+- [ ] Add the URL to the GitHub repo's About panel and to the Product Hunt listing
