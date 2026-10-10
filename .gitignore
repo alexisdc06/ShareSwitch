@@ -13,11 +13,11 @@ installer/Output/
 Thumbs.db
 .DS_Store
 
-# Designer source files (fonts may not be redistributable)
-branding/
+# Marketing: brand sources, launch kit, website (kept locally, never pushed)
+marketing/
 
-# Launch asset work-in-progress (drafts, stand-in fonts)
-launch/
+# Scratch folder for files to delete by hand
+_delete-me/
 
 # Agent skills (installed locally with npx skills / impeccable)
 .claude/

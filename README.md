@@ -9,7 +9,7 @@
 Share one window in Teams / Zoom / Meet, then flip what it shows with a hotkey + click.
 No "Stop sharing → Share again" dance. No "can you see my screen now?"
 
-<!-- DESIGNER: hero demo GIF goes here (see docs/LAUNCH.md) -->
+<!-- Hero demo GIF goes here -->
 <!-- ![Demo](assets/demo.gif) -->
 
 [![CI](https://github.com/alexisdc06/ShareSwitch/actions/workflows/ci.yml/badge.svg)](https://github.com/alexisdc06/ShareSwitch/actions)
