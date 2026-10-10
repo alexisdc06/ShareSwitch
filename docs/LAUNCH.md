@@ -47,7 +47,7 @@ live on stream**.
 | Thumbnail (looping GIF) | 240×240 | `launch/final/producthunt/thumbnail-240.gif` | ✅ |
 | Thumbnail (static fallback) | 240×240 | `launch/final/producthunt/thumbnail-240.png` | ✅ |
 | Gallery images | 1270×760 ×6 | `launch/final/producthunt/01–06*.png` (06 = saved numbers) | ✅ |
-| Demo video | 16:9, 39 s, music + SFX | `launch/final/shareswitch-launch.mp4` | ✅ |
+| Demo video | 16:9, 41 s, music + SFX | `launch/final/shareswitch-launch.mp4` | ✅ |
 | Video **as a YouTube link** | Product Hunt's gallery takes a video URL, not a file | — | 👤 upload to your YouTube (public or unlisted) |
 | Tagline, description, topics | ≤60 / ≤260 chars | `LAUNCH-COPY.md` | ✅ |
 | Maker comment | pre-written | `LAUNCH-COPY.md` | ✅ |
