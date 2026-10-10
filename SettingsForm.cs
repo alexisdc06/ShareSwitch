@@ -34,6 +34,8 @@ public sealed class SettingsForm : Form
     private readonly Font _sectionFont = new("Segoe UI Semibold", 8.5f);
     private readonly Font _semibold = new("Segoe UI Semibold", 9.75f);
     private bool _loading;
+    private int _flashSlot = -1;
+    private readonly System.Windows.Forms.Timer _flashTimer = new() { Interval = 1600 };
 
     public SettingsForm(WindowSlots slots)
     {
@@ -53,6 +55,29 @@ public sealed class SettingsForm : Form
 
         BuildLayout();
         LoadValues();
+
+        // Live: saving a window with Ctrl+Alt+Shift updates this list immediately,
+        // and the changed row glows green for a moment.
+        _slots.Changed += OnSlotsChanged;
+        _flashTimer.Tick += (_, _) => { _flashTimer.Stop(); _flashSlot = -1; _slotList.Invalidate(); };
+    }
+
+    private void OnSlotsChanged(int index)
+    {
+        if (IsDisposed || !IsHandleCreated) return;
+        if (InvokeRequired)
+        {
+            BeginInvoke(new Action(() => OnSlotsChanged(index)));
+            return;
+        }
+        RefreshSlotList();
+        if (index >= 0 && index < _slotList.Items.Count && !string.IsNullOrEmpty(_slotList.Items[index] as string))
+        {
+            _flashSlot = index;
+            _flashTimer.Stop();
+            _flashTimer.Start();
+            _slotList.Invalidate();
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -247,7 +272,8 @@ public sealed class SettingsForm : Form
         Graphics g = e.Graphics;
         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         bool sel = (e.State & DrawItemState.Selected) != 0;
-        using (var b = new SolidBrush(sel ? Theme.SurfaceHover : Theme.Surface))
+        bool flash = e.Index == _flashSlot;
+        using (var b = new SolidBrush(flash ? Color.FromArgb(60, Theme.Fluo) : sel ? Theme.SurfaceHover : Theme.Surface))
             g.FillRectangle(b, e.Bounds);
 
         string? title = _slotList.Items[e.Index] as string;
@@ -257,10 +283,10 @@ public sealed class SettingsForm : Form
         int badge = e.Bounds.Height - LogicalToDeviceUnits(10);
         var br = new RectangleF(e.Bounds.X + pad, e.Bounds.Y + (e.Bounds.Height - badge) / 2f, badge, badge);
         using (var p = Theme.RoundedRect(br, LogicalToDeviceUnits(5)))
-        using (var bb = new SolidBrush(assigned ? Theme.Violet : Theme.Line))
+        using (var bb = new SolidBrush(flash ? Theme.Fluo : assigned ? Theme.Violet : Theme.Line))
             g.FillPath(bb, p);
         TextRenderer.DrawText(g, (e.Index + 1).ToString(), _semibold, Rectangle.Round(br),
-            Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            flash ? Theme.Navy : Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
 
         var tr = new Rectangle((int)br.Right + pad, e.Bounds.Y, e.Bounds.Right - (int)br.Right - pad * 2, e.Bounds.Height);
         TextRenderer.DrawText(g, assigned ? title : "Not assigned", Font, tr, assigned ? Theme.OffWhite : Theme.Muted,
@@ -295,7 +321,8 @@ public sealed class SettingsForm : Form
         string combo = AppSettings.DescribeModifiers(AppSettings.Current.SelectionModifiers);
         _shortcutHelp.Text =
             $"Hold {combo} and click a window to mirror it.\n" +
-            $"{combo} + Shift + 1…9 — assign the window under the cursor.\n" +
+            $"{combo} + Shift + click — save it to the next free number.\n" +
+            $"{combo} + Shift + 1…9 — save it to that number.\n" +
             $"{combo} + 1…9 — switch to that window.\n" +
             $"{combo} + ← / → — step through open windows.";
     }
@@ -332,6 +359,8 @@ public sealed class SettingsForm : Form
     {
         if (disposing)
         {
+            _slots.Changed -= OnSlotsChanged;
+            _flashTimer.Dispose();
             _sectionFont.Dispose();
             _semibold.Dispose();
         }

@@ -20,6 +20,12 @@ public sealed class WindowSlots
     public WindowSlots() => Array.Fill(_titles, string.Empty);
 
     /// <summary>
+    /// Raised after any slot changes (argument: the slot index that changed).
+    /// Raised on the thread that made the change — the UI thread in practice.
+    /// </summary>
+    public event Action<int>? Changed;
+
+    /// <summary>
     /// Maps a key to slot 0–8 (digits 1–9), or -1. Recognised three ways, so it
     /// works on every layout and keyboard:
     /// the virtual key (1–9, NumPad1–9); the physical top-row position (scan
@@ -45,11 +51,40 @@ public sealed class WindowSlots
         };
     }
 
+    /// <summary>
+    /// Saves a window to a slot. A window lives in one slot only: if it was
+    /// already saved under another number, it moves.
+    /// </summary>
     public void Assign(int index, IntPtr hwnd, string title)
     {
         if (!IsValidIndex(index)) return;
+        for (int i = 0; i < Count; i++)
+        {
+            if (i != index && _handles[i] == hwnd)
+            {
+                _handles[i] = IntPtr.Zero;
+                _titles[i] = string.Empty;
+            }
+        }
         _handles[index] = hwnd;
         _titles[index] = title;
+        Changed?.Invoke(index);
+    }
+
+    /// <summary>Slot currently holding this window, or -1.</summary>
+    public int IndexOf(IntPtr hwnd)
+    {
+        for (int i = 0; i < Count; i++)
+            if (_handles[i] == hwnd && hwnd != IntPtr.Zero) return i;
+        return -1;
+    }
+
+    /// <summary>First empty slot (closed windows count as empty), or -1 if all nine are used.</summary>
+    public int FirstFree()
+    {
+        for (int i = 0; i < Count; i++)
+            if (!TryGet(i, out _, out _)) return i;
+        return -1;
     }
 
     /// <summary>
@@ -79,8 +114,10 @@ public sealed class WindowSlots
     public void Clear(int index)
     {
         if (!IsValidIndex(index)) return;
+        if (_handles[index] == IntPtr.Zero && _titles[index].Length == 0) return;
         _handles[index] = IntPtr.Zero;
         _titles[index] = string.Empty;
+        Changed?.Invoke(index);
     }
 
     /// <summary>Slot labels for the settings UI: index → title, or null if free.</summary>

@@ -33,7 +33,8 @@ Prefer a list? Right-click the tray icon → **Select Window…**
 | Shortcut | Does |
 |---|---|
 | `Ctrl + Alt` + click | Mirror the window you click |
-| `Ctrl + Alt + Shift` + `1…9` | Assign the window under your cursor to a number |
+| `Ctrl + Alt + Shift` + `1…9` | Save the window under your cursor to a number (the frame turns green) |
+| `Ctrl + Alt + Shift` + click | Save it to the next free number |
 | `Ctrl + Alt` + `1…9` | Jump straight to that window, from anywhere |
 | `Ctrl + Alt` + `←` / `→` | Step through your open windows |
 

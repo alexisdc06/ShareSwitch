@@ -30,6 +30,9 @@ internal static class Theme
     public static readonly Color Muted = Color.FromArgb(168, 163, 209);       // secondary text
     public static readonly Color SoftText = Color.FromArgb(214, 211, 240);
     public static readonly Color VioletDeep = Color.FromArgb(101, 90, 214);   // pressed / shadow of violet
+    // Functional accent, used only for "saving a window to a number" so that
+    // mode is impossible to confuse with ordinary selection (violet).
+    public static readonly Color Fluo = Color.FromArgb(57, 255, 20);          // fluo green #39FF14
 
     // ── Embedded resources ─────────────────────────────────────────────────
     private const string FontBold = "ShareSwitch.fonts.Figtree-Bold.ttf";

@@ -181,16 +181,14 @@ public sealed class SelectionController : IDisposable
         if (target == IntPtr.Zero || !WindowEnumerator.IsCaptureCandidate(target))
             return false;
 
-        string title = NativeMethods.GetWindowTitle(target);
-        Slots.Assign(slot, target, title);
-        SwitchTo(target, title, $"Saved to {slot + 1}  ·  {title}");
+        SaveAndShow(target, slot);
         return true;
     }
 
     private bool RecallSlot(int slot)
     {
         if (!Slots.TryGet(slot, out IntPtr hwnd, out string title)) return false;
-        SwitchTo(hwnd, title, $"{slot + 1}  ·  {title}");
+        SwitchTo(hwnd, title, $"{slot + 1}  ·  {title}", OverlayMode.Select, (slot + 1).ToString(), holdMs: 450);
         return true;
     }
 
@@ -234,7 +232,9 @@ public sealed class SelectionController : IDisposable
     }
 
     /// <summary>Switches the mirror and flashes the confirmation frame.</summary>
-    private void SwitchTo(IntPtr hwnd, string title, string? label = null)
+    /// <summary>Switches the mirror and shows a confirmation frame (optionally with a number badge).</summary>
+    private void SwitchTo(IntPtr hwnd, string title, string? label = null,
+                          OverlayMode mode = OverlayMode.Select, string? badge = null, int holdMs = 0)
     {
         // The user is driving by keyboard now, so stop the cursor-following
         // highlight — otherwise the next tracking tick would immediately pull
@@ -242,11 +242,24 @@ public sealed class SelectionController : IDisposable
         ExitSelectionMode();
 
         if (_getShareWindow().SetSource(hwnd, title))
-        {
-            _overlay.ShowOn(hwnd, label ?? title);
-            _overlay.FadeOut();
-        }
+            _overlay.Confirm(hwnd, label ?? title, mode, badge, holdMs);
     }
+
+    /// <summary>
+    /// Saves a window to a number, mirrors it, and confirms loudly: fluo-green
+    /// frame, "Saved to N" chip and a big N badge held for about a second.
+    /// </summary>
+    private void SaveAndShow(IntPtr hwnd, int slot)
+    {
+        string title = NativeMethods.GetWindowTitle(hwnd);
+        Slots.Assign(slot, hwnd, title);
+        SwitchTo(hwnd, title, $"Saved to {slot + 1}  ·  Ctrl+Alt+{slot + 1} to come back",
+                 OverlayMode.Assign, (slot + 1).ToString(), holdMs: 1100);
+    }
+
+    /// <summary>Shift held on top of the combo, with number shortcuts enabled.</summary>
+    private static bool AssignHintActive()
+        => CanAssign(RequiredModifiers) && ReadPhysicalModifiers().HasFlag(Keys.Shift);
 
     /// <summary>
     /// Modifier state during a low-level hook event. GetAsyncKeyState does not
@@ -343,9 +356,17 @@ public sealed class SelectionController : IDisposable
 
         _hoveredHwnd = root;
         string title = NativeMethods.GetWindowTitle(root);
-        // Shift held on top of the combo: say what pressing a number will do.
-        bool assignHint = CanAssign(RequiredModifiers) && ReadPhysicalModifiers().HasFlag(Keys.Shift);
-        _overlay.ShowOn(root, assignHint ? $"Press 1–9 to save  ·  {title}" : title);
+        if (AssignHintActive())
+        {
+            // Saving mode: fluo green, and say exactly what will happen.
+            int existing = Slots.IndexOf(root);
+            string where = existing >= 0 ? $"saved as {existing + 1} · " : string.Empty;
+            _overlay.ShowOn(root, $"{where}Press 1–9 or click to save  ·  {title}", OverlayMode.Assign);
+        }
+        else
+        {
+            _overlay.ShowOn(root, title);
+        }
     }
 
     private void OnLeftButtonDown(object? sender, MouseButtonEventArgs e)
@@ -357,6 +378,24 @@ public sealed class SelectionController : IDisposable
             return; // not a valid target — let the click through untouched
 
         e.Handled = true; // swallow the click so the target app never sees it
+
+        // Ctrl+Alt+Shift + click: save to a number without touching the number
+        // row (keeps its slot if already saved, else the first free one).
+        if (AssignHintActive())
+        {
+            int slot = Slots.IndexOf(root);
+            if (slot < 0) slot = Slots.FirstFree();
+            if (slot >= 0)
+            {
+                SaveAndShow(root, slot);
+                return;
+            }
+            ExitSelectionMode();
+            if (_getShareWindow().SetSource(root, NativeMethods.GetWindowTitle(root)))
+                _overlay.Confirm(root, "All 9 numbers are used — Ctrl+Alt+Shift+number replaces one",
+                                 OverlayMode.Assign, null, 1600);
+            return;
+        }
 
         string title = NativeMethods.GetWindowTitle(root);
 

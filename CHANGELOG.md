@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.6.4 — 2026-10-10
+
+**Saving windows to numbers now tells you exactly what's happening.**
+
+- Holding **Ctrl+Alt+Shift** turns the frame **fluo green** with a double border,
+  and its label reads *Press 1–9 or click to save* — plus *saved as 3* if that
+  window already has a number.
+- Saving shows a big **number badge** in the middle of the window, held for about
+  a second, with *Saved to 3 · Ctrl+Alt+3 to come back*. Recalling with
+  Ctrl+Alt+3 flashes the number too.
+- **Ctrl+Alt+Shift + click** saves to the next free number — no number key
+  needed (useful on keyboards that can't register four keys at once).
+- A window lives under one number only: saving it again moves it.
+- **Settings updates live**: the assigned-windows list refreshes the moment you
+  save, and the new row glows green.
+
 ## v0.6.1 — 2026-10-10
 
 **Fixed**
