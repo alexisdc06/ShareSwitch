@@ -36,7 +36,6 @@ Prefer a list? Right-click the tray icon → **Select Window…**
 | `Ctrl + Alt + Shift` + `1…9` | Save the window under your cursor to a number (the frame turns green) |
 | `Ctrl + Alt + Shift` + click | Save it to the next free number |
 | `Ctrl + Alt` + `1…9` | Jump straight to that window, from anywhere |
-| `Ctrl + Alt` + `←` / `→` | Step through your open windows |
 
 Settings (including **Start with Windows**) live in the tray menu → *Settings…*, never inside the shared window — that window stays pure content so your viewers never see app UI.
 

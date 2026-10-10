@@ -50,8 +50,12 @@ public sealed class AppSettings
     /// <summary>Enables recalling assigned windows with modifier + 1…9.</summary>
     public bool EnableSlotShortcuts { get; set; } = true;
 
-    /// <summary>Enables stepping through open windows with modifier + ← / →.</summary>
-    public bool EnableCycleShortcuts { get; set; } = true;
+    /// <summary>
+    /// Enables stepping through open windows with modifier + ← / →. Off by
+    /// default: cycling walks through every open window, including ones you
+    /// may not want on the call. Opt in from Settings.
+    /// </summary>
+    public bool EnableCycleShortcuts { get; set; }
 
     /// <summary>
     /// Start with only the tray icon, leaving the share window closed until

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.5 — 2026-10-10
+
+**Changed**
+
+- **Arrow shortcuts are now off by default.** `Ctrl+Alt+←` / `→` steps through
+  *every* open window, so it can briefly put something on the call you didn't
+  mean to share. Turn it on in Settings if you want it. Existing installs keep
+  whatever is already saved in `settings.json`.
+
 ## v0.6.4 — 2026-10-10
 
 **Saving windows to numbers now tells you exactly what's happening.**
