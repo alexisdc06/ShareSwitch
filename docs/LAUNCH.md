@@ -68,7 +68,7 @@ To rebuild with your icon: just replace the two files in `assets/`, commit, and 
 >
 > ShareSwitch fixes it with one dumb-simple idea: you share a proxy window once, and a live mirror of any window appears inside it. Hold Ctrl+Alt, click any window, and that's what your viewers see. Instantly.
 >
-> It's free, open source (MIT), ~5 MB, no install required (portable exe available), built on the Windows compositor so there's zero performance cost.
+> It's free, open source (MIT), needs no admin rights or install (portable exe available), built on the Windows compositor so there's zero performance cost.
 >
 > Things it doesn't do yet: show the mouse cursor (Windows API limitation I'm working around next), and macOS (sorry — Windows only for now).
 >

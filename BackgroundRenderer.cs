@@ -1,6 +1,5 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Reflection;
 
 namespace ShareSwitch;
 
@@ -64,8 +63,10 @@ public static class BackgroundRenderer
     {
         string key = AppSettings.Current.BackgroundImagePath ?? string.Empty;
 
-        if (_cached is not null && _cachedKey == key)
-            return _cached;
+        // Same key as last time: reuse the result — including "custom path was
+        // unreadable", so a bad path isn't re-read from disk on every paint.
+        if (_cachedKey == key)
+            return _cached ?? Theme.Backdrop;
 
         Invalidate();
         _cachedKey = key;
@@ -74,8 +75,10 @@ public static class BackgroundRenderer
         {
             try
             {
-                // Copy into memory so the file isn't locked while we run.
-                using var stream = new MemoryStream(File.ReadAllBytes(key));
+                // Copy into memory so the file isn't locked while we run. The
+                // stream is deliberately not disposed: GDI+ reads from it for
+                // as long as the image lives.
+                var stream = new MemoryStream(File.ReadAllBytes(key));
                 _cached = Image.FromStream(stream);
                 return _cached;
             }
@@ -85,28 +88,8 @@ public static class BackgroundRenderer
             }
         }
 
-        _cached = LoadEmbeddedDefault();
-        return _cached;
-    }
-
-    private static Image? LoadEmbeddedDefault()
-    {
-        try
-        {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-
-            // Match by suffix rather than a hard-coded logical name, which
-            // depends on root namespace and folder layout.
-            string? name = Array.Find(assembly.GetManifestResourceNames(),
-                n => n.EndsWith("background.png", StringComparison.OrdinalIgnoreCase));
-            if (name is null) return null;
-
-            using Stream? stream = assembly.GetManifestResourceStream(name);
-            return stream is null ? null : Image.FromStream(stream);
-        }
-        catch
-        {
-            return null;
-        }
+        // Built-in brand backdrop (gradient + oversized glass SS). Owned by Theme
+        // and shared with the dialog headers, so it is never cached/disposed here.
+        return Theme.Backdrop;
     }
 }

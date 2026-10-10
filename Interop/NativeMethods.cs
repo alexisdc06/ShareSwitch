@@ -28,6 +28,9 @@ internal static class NativeMethods
     public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
     public const int DWMWA_CLOAKED = 14;
 
+    // Dark title bar for app dialogs (Windows 10 20H1+ / 11).
+    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
     // Windows 11 (build 22000+) window chrome tinting.
     public const int DWMWA_BORDER_COLOR = 34;
     public const int DWMWA_CAPTION_COLOR = 35;

@@ -22,7 +22,13 @@ public class TrayApplicationContext : ApplicationContext
     {
         _statusItem = new ToolStripMenuItem("No source selected") { Enabled = false };
 
-        var menu = new ContextMenuStrip();
+        var menu = new ContextMenuStrip
+        {
+            Renderer = new BrandMenuRenderer(),
+            ShowImageMargin = false,
+            Font = new Font("Segoe UI", 9.75f),
+            Padding = new Padding(4)
+        };
         menu.Items.Add(_statusItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Show Share Window", null, (_, _) => ShowShareWindow());
@@ -33,7 +39,7 @@ public class TrayApplicationContext : ApplicationContext
 
         _trayIcon = new NotifyIcon
         {
-            Icon = AppIcon.Get(),
+            Icon = AppIcon.GetSmall(),
             Visible = true,
             Text = "ShareSwitch",
             ContextMenuStrip = menu

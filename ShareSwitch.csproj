@@ -26,7 +26,7 @@
 
   <!-- App identity (Version is overridden by CI from the git tag on releases) -->
   <PropertyGroup>
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
     <ApplicationIcon>assets\icon.ico</ApplicationIcon>
     <AssemblyTitle>ShareSwitch</AssemblyTitle>
     <Product>ShareSwitch</Product>
@@ -35,10 +35,16 @@
     <Description>Switch the window you share in video calls without stopping the share.</Description>
   </PropertyGroup>
 
-  <!-- Default backdrop, embedded so the single-file exe stays self-contained.
-       Replace assets\background.png and rebuild to change the shipped design. -->
+  <!-- Brand resources, embedded so the single-file exe stays self-contained.
+       Replace a file in assets\ and rebuild to change the shipped design.
+       Figtree is SIL OFL 1.1 (assets\fonts\OFL.txt) — a licensed stand-in for Aeonik. -->
   <ItemGroup>
-    <EmbeddedResource Include="assets\background.png" />
+    <EmbeddedResource Include="assets\backdrop.jpg" LogicalName="ShareSwitch.backdrop.jpg" />
+    <EmbeddedResource Include="assets\lockup-white.png" LogicalName="ShareSwitch.lockup-white.png" />
+    <EmbeddedResource Include="assets\icon.ico" LogicalName="ShareSwitch.icon.ico" />
+    <EmbeddedResource Include="assets\fonts\Figtree-Bold.ttf" LogicalName="ShareSwitch.fonts.Figtree-Bold.ttf" />
+    <EmbeddedResource Include="assets\fonts\Figtree-Regular.ttf" LogicalName="ShareSwitch.fonts.Figtree-Regular.ttf" />
+    <EmbeddedResource Include="assets\fonts\Figtree-LightItalic.ttf" LogicalName="ShareSwitch.fonts.Figtree-LightItalic.ttf" />
   </ItemGroup>
 
 </Project>

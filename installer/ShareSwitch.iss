@@ -28,6 +28,9 @@ UninstallDisplayIcon={app}\{#AppExe}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+; Brand panels (glass SS + lockup); 100% and 250% so they stay sharp on high-DPI screens
+WizardImageFile=..\assets\installer\wizard-large-100.bmp,..\assets\installer\wizard-large-250.bmp
+WizardSmallImageFile=..\assets\installer\wizard-small-100.bmp,..\assets\installer\wizard-small-250.bmp
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ; Gracefully close a running instance before install/uninstall
@@ -43,6 +46,8 @@ Name: "autostart"; Description: "Start {#AppName} when Windows starts"; Flags: u
 
 [Files]
 Source: "..\publish\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
+; The exe embeds Figtree (SIL OFL 1.1); the licence travels with it
+Source: "..\assets\fonts\OFL.txt"; DestDir: "{app}"; DestName: "Figtree-OFL.txt"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"

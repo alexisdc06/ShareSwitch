@@ -12,3 +12,9 @@ installer/Output/
 # OS
 Thumbs.db
 .DS_Store
+
+# Designer source files (fonts may not be redistributable)
+branding/
+
+# Launch asset work-in-progress (drafts, stand-in fonts)
+launch/

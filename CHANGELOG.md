@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.6.0 — 2026-10-10
+
+**The interface now wears the ShareSwitch brand.**
+
+- **Share window**: the idle screen — what a call sees before you pick a window —
+  is a branded title card on the brand gradient with the oversized glass SS:
+  logo, *Share this window in Teams, Zoom or Meet*, and the gesture drawn as
+  keycaps. It scales cleanly from the 480×270 default up to full screen.
+- **Accent colour** is the brand violet (#9085FF) everywhere: title bar, window
+  border, the selection frame and its title chip.
+- **Settings** is a dark two-column window with a brand header, toggle
+  switches, a branded hotkey picker and a cleaner list of assigned windows.
+- **Window picker**: dark, two-line rows (window title + app), pill buttons.
+- **Tray menu**: navy with violet highlights; the status line reads in violet.
+- **App icon**: the designer's icon, with hand-tuned 16–32 px versions so it
+  stays crisp in the tray.
+- **Installer**: brand side panel and header image.
+- Typography uses Figtree (SIL Open Font License, bundled) as a stand-in for
+  Aeonik, which is licensed separately.
+
 ## v0.5.0 — 2026-08-22
 
 **Added**

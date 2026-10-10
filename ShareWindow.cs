@@ -24,7 +24,7 @@ public class ShareWindow : Form
     private const double MaxWorkAreaFraction = 0.92;
 
     /// <summary>Accent used to mark this window as "the ShareSwitch one".</summary>
-    private static readonly Color AccentColor = Color.FromArgb(0, 170, 255);
+    private static readonly Color AccentColor = Theme.Violet;
 
     /// <summary>
     /// Thickness of the fallback in-content frame drawn on Windows 10, where the
@@ -56,7 +56,7 @@ public class ShareWindow : Form
         Icon = AppIcon.Get();
         MinimumSize = new Size(240, 160); // low, so small sources can be matched exactly
         StartPosition = FormStartPosition.Manual;
-        BackColor = Color.Black; // behind the backdrop, before first paint
+        BackColor = Theme.Navy; // behind the backdrop, before first paint
 
         RestoreBounds();
 
@@ -240,8 +240,8 @@ public class ShareWindow : Form
         bool chromeApplied = NativeMethods.TrySetWindowChrome(
             Handle,
             border: AccentColor,
-            caption: active ? AccentColor : Color.FromArgb(32, 38, 46),
-            text: active ? Color.White : Color.Gainsboro);
+            caption: active ? AccentColor : Theme.Navy,
+            text: active ? Color.White : Theme.SoftText);
 
         bool fallback = !chromeApplied && active;
         if (fallback != _useFallbackBorder)
@@ -284,52 +284,78 @@ public class ShareWindow : Form
     /// </summary>
     private void PaintEmptyState(Graphics g)
     {
-        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+        Rectangle c = ClientRectangle;
+        if (c.Width < 60 || c.Height < 60) return;
 
-        Rectangle client = ClientRectangle;
-        string combo = AppSettings.DescribeModifiers(AppSettings.Current.SelectionModifiers);
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
-        // Scrim keeps the text readable over any custom artwork.
-        using (var scrim = new SolidBrush(Color.FromArgb(120, 0, 0, 0)))
-            g.FillRectangle(scrim, client);
+        // Laid out on a 960x540 grid and scaled, so the card keeps its
+        // proportions at any window size (the default window is 480x270).
+        float u = Math.Min(c.Width / 960f, c.Height / 540f);
+        float m = Math.Max(14f, c.Width * 0.075f);
 
-        using var titleFont = new Font("Segoe UI", 26f, FontStyle.Bold);
-        using var bodyFont = new Font("Segoe UI", 12f);
-        using var mutedFont = new Font("Segoe UI", 10.5f);
-        using var titleBrush = new SolidBrush(Color.White);
-        using var bodyBrush = new SolidBrush(Color.FromArgb(225, 232, 240));
-        using var mutedBrush = new SolidBrush(Color.FromArgb(150, 162, 178));
-        using var accentBrush = new SolidBrush(AccentColor);
-
-        var center = new StringFormat
+        // Navy wash from the left: the copy sits on calm ground, the glass SS
+        // stays bright on the right.
+        var washRect = new RectangleF(0, 0, Math.Max(1f, c.Width * 0.78f), c.Height);
+        using (var wash = new System.Drawing.Drawing2D.LinearGradientBrush(
+                   washRect, Color.FromArgb(200, Theme.Navy), Color.FromArgb(0, Theme.Navy), 0f))
         {
-            Alignment = StringAlignment.Center,
-            LineAlignment = StringAlignment.Center
-        };
-
-        float y = client.Height / 2f - 86;
-
-        g.DrawString("ShareSwitch", titleFont, titleBrush,
-            new RectangleF(0, y, client.Width, 44), center);
-        y += 52;
-
-        g.DrawString("Share this window in Teams, Zoom or Meet.", bodyFont, bodyBrush,
-            new RectangleF(0, y, client.Width, 26), center);
-        y += 30;
-
-        g.DrawString($"Then hold {combo} and click any window to mirror it here.",
-            bodyFont, accentBrush, new RectangleF(0, y, client.Width, 26), center);
-        y += 42;
-
-        g.DrawString("Settings and shortcuts live in the tray icon, near the clock.",
-            mutedFont, mutedBrush, new RectangleF(0, y, client.Width, 24), center);
-
-        if (_noticeMessage is { Length: > 0 })
-        {
-            y += 34;
-            g.DrawString(_noticeMessage, mutedFont, mutedBrush,
-                new RectangleF(0, y, client.Width, 24), center);
+            wash.WrapMode = System.Drawing.Drawing2D.WrapMode.TileFlipX;
+            g.FillRectangle(wash, washRect);
         }
+
+        if (Theme.Lockup is { } lk)
+        {
+            float lh = 50 * u;
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.DrawImage(lk, m, c.Height * 0.12f, lk.Width * lh / lk.Height, lh);
+        }
+
+        Font head = Theme.Head(Math.Max(15f, 46 * u));
+        Font accent = Theme.Accent(Math.Max(15f, 46 * u));
+        Font body = Theme.Body(Math.Max(11f, 19 * u));
+        Font small = Theme.Body(Math.Max(10f, 14 * u));
+        Font keyFont = Theme.Head(Math.Max(10f, 15 * u));
+
+        float line1 = c.Height * 0.47f;
+        float x = Theme.DrawRun(g, "Share ", head, Theme.OffWhite, m, line1);
+        Theme.DrawRun(g, "this window", accent, Theme.Violet, x, line1);
+        float line2 = line1 + head.Size * 1.08f;
+        Theme.DrawRun(g, "in Teams, Zoom or Meet.", head, Theme.OffWhite, m, line2);
+
+        // The gesture, drawn as keycaps: [Ctrl] + [Alt] + click any window
+        float rowY = line2 + head.Size * 0.9f + 22 * u;
+        float kh = Math.Max(18f, 32 * u);
+        float kx = m;
+        float plusGap = Math.Max(5f, 9 * u);
+        foreach (string key in ModifierNames(AppSettings.Current.SelectionModifiers))
+        {
+            RectangleF r = Theme.DrawKeycap(g, key, kx, rowY, kh, keyFont);
+            kx = r.Right + plusGap;
+            kx = Theme.DrawRun(g, "+", body, Theme.SoftText, kx, rowY + body.Size * 0.35f) + plusGap;
+        }
+        float room = c.Width - m - kx;
+        foreach (string tail in new[] { "click any window to mirror it here", "click any window", "click a window" })
+        {
+            if (Theme.Measure(g, tail, body) <= room)
+            {
+                Theme.DrawRun(g, tail, body, Theme.SoftText, kx, rowY + body.Size * 0.35f);
+                break;
+            }
+        }
+
+        float foot = c.Height - Math.Max(12f, c.Height * 0.08f);
+        if (_noticeMessage is { Length: > 0 })
+            Theme.DrawRun(g, _noticeMessage, small, Theme.Violet, m, foot - small.Size * 1.6f);
+        Theme.DrawRun(g, "Settings and shortcuts live in the tray icon, near the clock.", small, Theme.Muted, m, foot);
+    }
+
+    private static IEnumerable<string> ModifierNames(Keys modifiers)
+    {
+        if (modifiers.HasFlag(Keys.Control)) yield return "Ctrl";
+        if (modifiers.HasFlag(Keys.Alt)) yield return "Alt";
+        if (modifiers.HasFlag(Keys.Shift)) yield return "Shift";
     }
 
     protected override void OnHandleCreated(EventArgs e)

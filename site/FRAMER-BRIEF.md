@@ -40,7 +40,7 @@ no dead air.
 
 **Buttons:** Download for Windows · View source
 
-**Under the buttons:** Free and open source · Windows 10 & 11 · ~5 MB · No
+**Under the buttons:** Free and open source · Windows 10 & 11 · No admin rights · No
 account, no telemetry
 
 **Final CTA:** Stop saying "can you see my screen now?"

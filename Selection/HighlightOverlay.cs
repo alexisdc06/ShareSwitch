@@ -20,7 +20,7 @@ namespace ShareSwitch.Selection;
 /// </summary>
 public sealed class HighlightOverlay : Form
 {
-    private static readonly Color BorderColor = Color.FromArgb(0, 170, 255);
+    private static readonly Color BorderColor = Theme.Violet;
     private const int BorderThickness = 4;
 
     private const int FadeTickMs = 25;
@@ -153,15 +153,19 @@ public sealed class HighlightOverlay : Form
 
         if (_title.Length > 0)
         {
-            using var font = new Font("Segoe UI", 10f, FontStyle.Bold);
+            // Brand title chip. Shape edges stay aliased on purpose: this form
+            // keys out pure black, so anti-aliased edges would leave dark fringes.
+            Font font = Theme.Head(LogicalToDeviceUnits(14));
             string text = _title.Length > 80 ? _title[..80] + "…" : _title;
-            SizeF size = g.MeasureString(text, font);
-
-            var chip = new RectangleF(BorderThickness + 6, BorderThickness + 6,
-                size.Width + 16, size.Height + 8);
-            using var bg = new SolidBrush(BorderColor);
-            g.FillRectangle(bg, chip);
-            g.DrawString(text, font, Brushes.White, chip.X + 8, chip.Y + 4);
+            float tw = Theme.Measure(g, text, font);
+            float padX = LogicalToDeviceUnits(12), h = font.Size * 2.0f;
+            var chip = new RectangleF(BorderThickness + 8, BorderThickness + 8, tw + padX * 2, h);
+            g.SmoothingMode = SmoothingMode.None;
+            using (var path = Theme.RoundedRect(chip, LogicalToDeviceUnits(6)))
+            using (var bg = new SolidBrush(BorderColor))
+                g.FillPath(bg, path);
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+            Theme.DrawRun(g, text, font, Color.White, chip.X + padX, chip.Y + h / 2 + font.Size * 0.35f);
         }
     }
 
